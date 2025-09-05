@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'music_service.dart';
 
 // Global playlists data with real song titles and demo URLs
 final Map<String, List<Map<String, String>>> globalPlaylists = {
@@ -1100,7 +1101,31 @@ class _EnhancedSongRowState extends State<EnhancedSongRow> {
         setState(() {
           _isLoading = true;
         });
-        await _audioPlayer.play(UrlSource(widget.url));
+        
+        // Use MusicService to get real audio URL
+        final audioUrl = await MusicService.getSongAudioUrl(widget.title);
+        
+        if (audioUrl != null) {
+          print('Playing real audio URL: $audioUrl');
+          await _audioPlayer.play(UrlSource(audioUrl));
+        } else {
+          // Fallback to demo URL if API fails
+          print('API failed, using fallback URL: ${widget.url}');
+          await _audioPlayer.play(UrlSource(widget.url));
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Using demo audio - API unavailable',
+                  style: GoogleFonts.pressStart2p(fontSize: 8),
+                ),
+                backgroundColor: const Color(0xFFFF9800),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -2243,7 +2268,34 @@ class _PlayerScreenState extends State<PlayerScreen> {
         setState(() {
           _isLoading = true;
         });
-        await _audioPlayer.play(UrlSource(_currentSong!['url']!));
+        
+        // Try to get real audio URL from API
+        final songTitle = _currentSong!['title'] ?? 'Unknown Song';
+        final audioUrl = await MusicService.getSongAudioUrl(songTitle);
+        
+        String urlToPlay;
+        if (audioUrl != null) {
+          print('Playing real audio URL for "$songTitle": $audioUrl');
+          urlToPlay = audioUrl;
+        } else {
+          print('API failed for "$songTitle", using fallback URL: ${_currentSong!['url']!}');
+          urlToPlay = _currentSong!['url']!;
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Using demo audio - API unavailable',
+                  style: GoogleFonts.pressStart2p(fontSize: 8),
+                ),
+                backgroundColor: const Color(0xFFFF9800),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+        
+        await _audioPlayer.play(UrlSource(urlToPlay));
         if (_isRepeat) {
           await _audioPlayer.setReleaseMode(ReleaseMode.loop);
         } else {
