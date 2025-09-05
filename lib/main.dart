@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // Global playlists data with real song titles and demo URLs
 final Map<String, List<Map<String, String>>> globalPlaylists = {
@@ -1043,17 +1044,19 @@ class PixelCloud extends StatelessWidget {
   }
 }
 
-// Song Row Widget
-class SongRow extends StatefulWidget {
+// Enhanced Song Row Widget with Audio Preview
+class EnhancedSongRow extends StatefulWidget {
   final String title;
+  final String url;
   final bool isSelected;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
 
-  const SongRow({
+  const EnhancedSongRow({
     super.key,
     required this.title,
+    required this.url,
     required this.isSelected,
     required this.isFavorite,
     required this.onTap,
@@ -1061,10 +1064,63 @@ class SongRow extends StatefulWidget {
   });
 
   @override
-  State<SongRow> createState() => _SongRowState();
+  State<EnhancedSongRow> createState() => _EnhancedSongRowState();
 }
 
-class _SongRowState extends State<SongRow> {
+class _EnhancedSongRowState extends State<EnhancedSongRow> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        setState(() {
+          _isLoading = true;
+        });
+        await _audioPlayer.play(UrlSource(widget.url));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isPlaying = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error playing audio: ${e.toString()}',
+              style: GoogleFonts.pressStart2p(fontSize: 8),
+            ),
+            backgroundColor: const Color(0xFF831843),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -1123,9 +1179,49 @@ class _SongRowState extends State<SongRow> {
                   fontSize: 10,
                   color: const Color(0xFF374151),
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 12),
+            // Play/Pause button
+            GestureDetector(
+              onTap: _togglePlayPause,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _isPlaying 
+                      ? const Color(0xFF10B981).withOpacity(0.1)
+                      : const Color(0xFF6B46C1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(
+                    color: _isPlaying 
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF6B46C1),
+                    width: 2,
+                  ),
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            const Color(0xFF6B46C1),
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        _isPlaying ? Icons.pause : Icons.play_arrow,
+                        size: 18,
+                        color: _isPlaying 
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF6B46C1),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 8),
             // Heart favorite button
             GestureDetector(
               onTap: widget.onFavoriteToggle,
@@ -1243,19 +1339,17 @@ class _SongsScreenState extends State<SongsScreen> {
     final String? playlistName = ModalRoute.of(context)?.settings.arguments as String?;
     
     // Get songs from global playlists data
-    final List<Map<String, String>> songMaps = playlistName != null 
-        ? (globalPlaylists[playlistName] ?? [])
-        : [];
+    List<Map<String, String>> songMaps = [];
     
-    final List<String> songs = songMaps.map((song) => song['title']!).toList();
-    
-    // If no specific playlist, show a general mix
-    if (songs.isEmpty && playlistName == null) {
-      final allSongs = <String>[];
+    if (playlistName != null && globalPlaylists.containsKey(playlistName)) {
+      songMaps = globalPlaylists[playlistName]!;
+    } else if (playlistName == null) {
+      // If no specific playlist, show a general mix from all playlists
+      final allSongs = <Map<String, String>>[];
       globalPlaylists.values.forEach((playlist) {
-        allSongs.addAll(playlist.take(5).map((song) => song['title']!));
+        allSongs.addAll(playlist.take(5));
       });
-      songs.addAll(allSongs.take(20));
+      songMaps = allSongs.take(25).toList();
     }
 
     return Scaffold(
@@ -1308,7 +1402,7 @@ class _SongsScreenState extends State<SongsScreen> {
                           ),
                         ),
                         Text(
-                          '${songs.length} songs',
+                          '${songMaps.length} songs',
                           style: GoogleFonts.pressStart2p(
                             fontSize: 8,
                             color: const Color(0xFF374151),
@@ -1333,12 +1427,14 @@ class _SongsScreenState extends State<SongsScreen> {
                     ),
                     child: ListView.builder(
                       padding: const EdgeInsets.all(8),
-                      itemCount: songs.length,
+                      itemCount: songMaps.length,
                       itemBuilder: (context, index) {
-                        return SongRow(
-                          title: songs[index],
+                        final song = songMaps[index];
+                        return EnhancedSongRow(
+                          title: song['title']!,
+                          url: song['url']!,
                           isSelected: selectedSongIndex == index,
-                          isFavorite: favoritesManager.isFavorite(songs[index]),
+                          isFavorite: favoritesManager.isFavorite(song['title']!),
                           onTap: () {
                             setState(() {
                               selectedSongIndex = selectedSongIndex == index ? null : index;
@@ -1346,10 +1442,10 @@ class _SongsScreenState extends State<SongsScreen> {
                           },
                           onFavoriteToggle: () {
                             setState(() {
-                              if (favoritesManager.isFavorite(songs[index])) {
-                                favoritesManager.removeFavorite(songs[index]);
+                              if (favoritesManager.isFavorite(song['title']!)) {
+                                favoritesManager.removeFavorite(song['title']!);
                               } else {
-                                favoritesManager.addFavorite(songs[index]);
+                                favoritesManager.addFavorite(song['title']!);
                               }
                             });
                           },
@@ -1371,7 +1467,12 @@ class _SongsScreenState extends State<SongsScreen> {
                       textColor: const Color(0xFF6B46C1),
                       borderColor: const Color(0xFF6B46C1),
                       onPressed: selectedSongIndex != null ? () {
-                        Navigator.pushNamed(context, '/player');
+                        final selectedSong = songMaps[selectedSongIndex!];
+                        Navigator.pushNamed(
+                          context, 
+                          '/player',
+                          arguments: selectedSong,
+                        );
                       } : null,
                     ),
                     const SizedBox(width: 16),
@@ -1766,58 +1867,569 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
   }
 }
 
-// Player Screen
-class PlayerScreen extends StatelessWidget {
-  const PlayerScreen({super.key});
+// Pixel Cassette Background with Animation
+class PixelCassetteBackground extends StatefulWidget {
+  final Widget child;
+
+  const PixelCassetteBackground({super.key, required this.child});
+
+  @override
+  State<PixelCassetteBackground> createState() => _PixelCassetteBackgroundState();
+}
+
+class _PixelCassetteBackgroundState extends State<PixelCassetteBackground>
+    with TickerProviderStateMixin {
+  late AnimationController _rotationController;
+  late AnimationController _floatingController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+    
+    _floatingController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    _floatingController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFDF2F8), // Light pink
+            Color(0xFFE8D5FF), // Lavender
+            Color(0xFFF0F9FF), // Light blue
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // Floating cassette tapes
+              ...List.generate(6, (index) {
+                return AnimatedBuilder(
+                  animation: _floatingController,
+                  builder: (context, child) {
+                    return Positioned(
+                      left: (index * 127.5) % constraints.maxWidth,
+                      top: (index * 89.7 + _floatingController.value * 20) % constraints.maxHeight,
+                      child: Opacity(
+                        opacity: 0.1 + (index % 3) * 0.05,
+                        child: PixelCassette(
+                          size: 40.0 + (index % 2) * 20,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+              // Rotating musical notes
+              ...List.generate(8, (index) {
+                return AnimatedBuilder(
+                  animation: _rotationController,
+                  builder: (context, child) {
+                    return Positioned(
+                      left: (index * 73.5) % constraints.maxWidth,
+                      top: (index * 91.7) % constraints.maxHeight,
+                      child: Transform.rotate(
+                        angle: _rotationController.value * 2 * 3.14159,
+                        child: PixelStar(
+                          size: 8.0,
+                          color: const Color(0xFF6B46C1).withOpacity(0.3),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+              widget.child,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Pixel Cassette Widget
+class PixelCassette extends StatelessWidget {
+  final double size;
+
+  const PixelCassette({super.key, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size * 0.6,
+      decoration: BoxDecoration(
+        color: const Color(0xFF374151).withOpacity(0.7),
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(
+          color: const Color(0xFF1F2937),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Left reel
+          Container(
+            width: size * 0.2,
+            height: size * 0.2,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2937),
+              borderRadius: BorderRadius.circular(size * 0.1),
+            ),
+          ),
+          // Right reel
+          Container(
+            width: size * 0.2,
+            height: size * 0.2,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2937),
+              borderRadius: BorderRadius.circular(size * 0.1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Pixel Progress Bar
+class PixelProgressBar extends StatelessWidget {
+  final double progress; // 0.0 to 1.0
+  final String currentTime;
+  final String totalTime;
+
+  const PixelProgressBar({
+    super.key,
+    required this.progress,
+    required this.currentTime,
+    required this.totalTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Progress bar
+        Container(
+          height: 20,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(2),
+            border: Border.all(
+              color: const Color(0xFF6B46C1),
+              width: 2,
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Progress fill
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                width: double.infinity * progress,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6B46C1).withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Time labels
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              currentTime,
+              style: GoogleFonts.pressStart2p(
+                fontSize: 8,
+                color: const Color(0xFF374151),
+              ),
+            ),
+            Text(
+              totalTime,
+              style: GoogleFonts.pressStart2p(
+                fontSize: 8,
+                color: const Color(0xFF374151),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// Player Control Button
+class PlayerControlButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color? color;
+  final Color? backgroundColor;
+  final bool isActive;
+
+  const PlayerControlButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.color,
+    this.backgroundColor,
+    this.isActive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? 
+              (isActive 
+                  ? const Color(0xFF6B46C1).withOpacity(0.2)
+                  : Colors.white.withOpacity(0.8)),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: color ?? const Color(0xFF6B46C1),
+            width: isActive ? 3 : 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (color ?? const Color(0xFF6B46C1)).withOpacity(0.3),
+              offset: const Offset(2, 2),
+              blurRadius: isActive ? 4 : 2,
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          color: color ?? const Color(0xFF6B46C1),
+        ),
+      ),
+    );
+  }
+}
+
+// Player Screen
+class PlayerScreen extends StatefulWidget {
+  const PlayerScreen({super.key});
+
+  @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  bool _isLoading = false;
+  bool _isRepeat = false;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
+  Map<String, String>? _currentSong;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    
+    // Listen to player state changes
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+          _isLoading = state == PlayerState.stopped && _isLoading;
+        });
+      }
+    });
+
+    // Listen to position changes
+    _audioPlayer.onPositionChanged.listen((Duration position) {
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+      }
+    });
+
+    // Listen to duration changes
+    _audioPlayer.onDurationChanged.listen((Duration duration) {
+      if (mounted) {
+        setState(() {
+          _totalDuration = duration;
+        });
+      }
+    });
+
+    // Listen to completion
+    _audioPlayer.onPlayerComplete.listen((event) {
+      if (mounted) {
+        if (_isRepeat) {
+          _playCurrentSong();
+        } else {
+          setState(() {
+            _isPlaying = false;
+            _currentPosition = Duration.zero;
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  Future<void> _playCurrentSong() async {
+    if (_currentSong != null) {
+      try {
+        setState(() {
+          _isLoading = true;
+        });
+        await _audioPlayer.play(UrlSource(_currentSong!['url']!));
+        if (_isRepeat) {
+          await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+        } else {
+          await _audioPlayer.setReleaseMode(ReleaseMode.release);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error playing audio: ${e.toString()}',
+                style: GoogleFonts.pressStart2p(fontSize: 8),
+              ),
+              backgroundColor: const Color(0xFF831843),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _pauseAudio() async {
+    await _audioPlayer.pause();
+  }
+
+  Future<void> _stopAudio() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _currentPosition = Duration.zero;
+    });
+  }
+
+  void _toggleRepeat() {
+    setState(() {
+      _isRepeat = !_isRepeat;
+    });
+    
+    // Update release mode if currently playing
+    if (_isPlaying) {
+      if (_isRepeat) {
+        _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      } else {
+        _audioPlayer.setReleaseMode(ReleaseMode.release);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Get song data from navigation arguments
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is Map<String, String> && _currentSong == null) {
+      _currentSong = arguments;
+    } else if (arguments is String && _currentSong == null) {
+      // Handle string argument (from favorites)
+      _currentSong = {'title': arguments, 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'};
+    }
+
+    final songTitle = _currentSong?['title'] ?? 'No Song Selected';
+    final progress = _totalDuration.inMilliseconds > 0 
+        ? _currentPosition.inMilliseconds / _totalDuration.inMilliseconds 
+        : 0.0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Player'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: PixelContainer(
-                backgroundColor: const Color(0xFFE8D5FF), // Lavender
-                borderColor: const Color(0xFF6B46C1),
-                child: Center(
-                  child: Text(
-                    'Music player\ncontrols will\nappear here',
-                    style: GoogleFonts.pressStart2p(
-                      fontSize: 12,
-                      color: const Color(0xFF6B46C1),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      extendBodyBehindAppBar: true,
+      body: PixelCassetteBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
               children: [
-                PixelButton(
-                  text: '← Favourites',
-                  backgroundColor: const Color(0xFFFEF7FF),
-                  textColor: const Color(0xFF7C2D12),
-                  onPressed: () => Navigator.pushNamed(context, '/favourites'),
-                ),
-                PixelButton(
-                  text: 'Home',
-                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/',
-                    (route) => false,
+                // Song title display
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  borderColor: const Color(0xFF6B46C1),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.album,
+                        size: 48,
+                        color: const Color(0xFF6B46C1),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Now Playing',
+                        style: GoogleFonts.pressStart2p(
+                          fontSize: 10,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        songTitle,
+                        style: GoogleFonts.pressStart2p(
+                          fontSize: 14,
+                          color: const Color(0xFF6B46C1),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Progress bar
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.8),
+                  borderColor: const Color(0xFF6B46C1),
+                  child: PixelProgressBar(
+                    progress: progress.clamp(0.0, 1.0),
+                    currentTime: _formatDuration(_currentPosition),
+                    totalTime: _formatDuration(_totalDuration),
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Playback controls
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.8),
+                  borderColor: const Color(0xFF6B46C1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Stop button
+                      PlayerControlButton(
+                        icon: Icons.stop,
+                        onPressed: _stopAudio,
+                        color: const Color(0xFF831843),
+                      ),
+                      // Play/Pause button
+                      _isLoading
+                          ? Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF6B46C1),
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFF6B46C1),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : PlayerControlButton(
+                              icon: _isPlaying ? Icons.pause : Icons.play_arrow,
+                              onPressed: _isPlaying ? _pauseAudio : _playCurrentSong,
+                              backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                              color: const Color(0xFF10B981),
+                              isActive: _isPlaying,
+                            ),
+                      // Repeat button
+                      PlayerControlButton(
+                        icon: Icons.repeat,
+                        onPressed: _toggleRepeat,
+                        color: _isRepeat ? const Color(0xFFEAB308) : const Color(0xFF6B46C1),
+                        isActive: _isRepeat,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                // Navigation buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PixelButton(
+                      text: '← Favourites',
+                      backgroundColor: const Color(0xFFFEF7FF),
+                      textColor: const Color(0xFF7C2D12),
+                      onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                    ),
+                    PixelButton(
+                      text: 'Home',
+                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/',
+                        (route) => false,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
