@@ -1,6 +1,307 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Global playlists data with real song titles and demo URLs
+final Map<String, List<Map<String, String>>> globalPlaylists = {
+  'Feminine': [
+    {'title': 'Girl Power', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Strong Woman', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Independent', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Confidence', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Fierce', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Unstoppable', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Warrior Queen', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Self Made', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Boss Lady', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Empowered', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Diamond', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Queen Energy', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Flawless', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Rise Up', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Brave Heart', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Goddess Mode', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Fearless', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Power Within', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Shine Bright', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Phoenix Rising', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Limitless', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Crown Yourself', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Unbreakable', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Victory Dance', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Golden Hour', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Love': [
+    {'title': 'Love Story', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Perfect', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'All of Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Thinking Out Loud', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'A Thousand Years', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Can\'t Help Myself', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Marry Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Lucky', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'The Way You Look Tonight', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Endless Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'At Last', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Make You Feel My Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'L-O-V-E', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Just the Way You Are', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Crazy Little Thing Called Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'I Choose You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Better Days', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Heaven', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Sugar', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Best Part', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Golden', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Adorn', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Come Through and Chill', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Stay', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Falling', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Pookie': [
+    {'title': 'Cute', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Sweetheart', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Baby', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Honey', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Darling', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Sunshine', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Angel', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Butterfly', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Princess', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Cuddles', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Giggles', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Bubbles', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Sparkles', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Dimples', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Snuggles', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Kisses', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Hugs', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Blush', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Smile', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Heart Eyes', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Sweet Dreams', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Lovely', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Adorable', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Precious', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Cherish', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Kpop': [
+    {'title': 'Dynamite', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Gangnam Style', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Boy With Luv', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'DNA', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Fake Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Idol', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Spring Day', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Blood Sweat & Tears', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Fire', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Mic Drop', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Save Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Run', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'I Need U', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Dope', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'War of Hormone', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Danger', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Just One Day', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Boy In Luv', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'No More Dream', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'N.O', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'We Are Bulletproof Pt.2', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Permission to Dance', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Butter', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Life Goes On', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'ON', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'BLACKPINK': [
+    {'title': 'DDU-DU DDU-DU', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Kill This Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'How You Like That', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Lovesick Girls', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Pink Venom', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Shut Down', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'BOOMBAYAH', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Whistle', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Playing With Fire', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Stay', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'As If It\'s Your Last', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Don\'t Know What To Do', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Kick It', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Forever Young', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Really', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'See U Later', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Pretty Savage', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Bet You Wanna', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Crazy Over You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Love To Hate Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'You Never Know', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Typa Girl', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Yeah Yeah Yeah', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Hard to Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'The Happiest Girl', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Sad': [
+    {'title': 'Someone Like You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Hello', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Fix You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Mad World', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Hurt', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Tears in Heaven', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Black', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Breathe Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Mad About You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Skinny Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'The Night We Met', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Falling', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'When I Was Your Man', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'All Too Well', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Ronan', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Soon You\'ll Get Better', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Death by a Thousand Cuts', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Sad Beautiful Tragic', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Forever Winter', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Marjorie', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Right Where You Left Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Happiness', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Champagne Problems', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Tolerate It', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Evermore', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Mafia': [
+    {'title': 'Godfather Theme', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Scarface', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Mack the Knife', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Bad Guy', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Smooth Criminal', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Gangster\'s Paradise', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Untouchable', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Money Power Respect', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'C.R.E.A.M.', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Big Poppa', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Juicy', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Mo Money Mo Problems', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Hypnotize', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Deep Cover', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Nuthin\' But a G Thang', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Still D.R.E.', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'The Next Episode', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'California Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Hit \'Em Up', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Changes', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Dear Mama', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'All Eyez on Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Ambitionz Az a Ridah', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Hail Mary', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Me Against the World', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Lana Del Rey': [
+    {'title': 'Video Games', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Born to Die', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Summertime Sadness', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Young and Beautiful', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'West Coast', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Blue Jeans', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Ride', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'National Anthem', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Dark Paradise', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Off to the Races', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Carmen', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Diet Mountain Dew', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Radio', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Lust for Life', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Love', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Venice Bitch', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Mariners Apartment Complex', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Norman Fucking Rockwell', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Doin\' Time', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'The Greatest', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Fuck it I love you', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Hope is a Dangerous Thing', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Chemtrails Over the Country Club', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'White Dress', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Ocean Eyes', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Taylor Swift': [
+    {'title': 'Love Story', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'You Belong With Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Shake It Off', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Blank Space', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Bad Blood', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Look What You Made Me Do', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Delicate', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'ME!', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Lover', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'The Man', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Cardigan', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Willow', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Anti-Hero', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Lavender Haze', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Karma', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Cruel Summer', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Getaway Car', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'All Too Well', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'We Are Never Getting Back Together', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'I Knew You Were Trouble', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': '22', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Style', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Wildest Dreams', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Out of the Woods', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'New Romantics', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Okay Not To Be Okay': [
+    {'title': 'Breathe Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Heavy', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Scars to Your Beautiful', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Unwell', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Not Afraid', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Stronger', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Be Still', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Skyscraper', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Fighter', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Titanium', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Rise Up', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Fight Song', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Brave', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Roar', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Stronger (What Doesn\'t Kill You)', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Confident', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Unwritten', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Beautiful', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Perfect', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Try', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Firework', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'What Makes You Beautiful', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Count on Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Good as Hell', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'High Hopes', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+  'Studious': [
+    {'title': 'Focus', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Weightless', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'Clair de Lune', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'Gymnopédie No. 1', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Comptine d\'un autre été', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'River Flows in You', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Nuvole Bianche', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Primavera', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Una Mattina', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+    {'title': 'Divenire', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'},
+    {'title': 'Nocturn', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'},
+    {'title': 'Fly', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'},
+    {'title': 'Love Me', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'},
+    {'title': 'Ora', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'},
+    {'title': 'Oltremare', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3'},
+    {'title': 'Experience', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3'},
+    {'title': 'Written on the Sky', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {'title': 'Elegy for Dunkirk', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
+    {'title': 'On the Nature of Daylight', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+    {'title': 'The Blue Notebooks', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'},
+    {'title': 'Written in Stone', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'},
+    {'title': 'Sleep Baby Sleep', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'},
+    {'title': 'Horizon', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'},
+    {'title': 'Departure', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'},
+    {'title': 'Study Music', 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'},
+  ],
+};
+
 void main() {
   runApp(const StarryTunesApp());
 }
@@ -935,29 +1236,27 @@ class SongsScreen extends StatefulWidget {
 
 class _SongsScreenState extends State<SongsScreen> {
   int? selectedSongIndex;
-  Set<int> favoriteSongs = {};
-
-  // Sample songs data based on playlist
-  Map<String, List<String>> playlistSongs = {
-    'Feminine': ['Girl Power', 'Strong Woman', 'Confidence', 'Independent', 'Fierce'],
-    'Love': ['Heart Beats', 'Sweet Dreams', 'Forever Yours', 'True Love', 'Romantic Night'],
-    'Pookie': ['Cute Vibes', 'Adorable You', 'Sweet Moments', 'Lovely Day', 'Cozy Time'],
-    'Kpop': ['Dynamic Beat', 'Seoul Nights', 'K-Star', 'Harmony Wave', 'Pop Revolution'],
-    'BLACKPINK': ['Pink Venom', 'How You Like That', 'Kill This Love', 'DDU-DU DDU-DU', 'Shut Down'],
-    'Sad': ['Lonely Heart', 'Tears Fall', 'Blue Mood', 'Empty Room', 'Rainy Days'],
-    'Mafia': ['Dark Streets', 'Underground', 'Silent Night', 'Power Play', 'Shadow Game'],
-    'Lana Del Rey': ['Video Games', 'Born to Die', 'Summertime Sadness', 'Young and Beautiful', 'West Coast'],
-    'Taylor Swift': ['Shake It Off', 'Love Story', 'Anti-Hero', 'Blank Space', 'You Belong With Me'],
-    'Okay Not To Be Okay': ['Mental Health', 'Self Care', 'Its Okay', 'Healing Time', 'Better Days'],
-    'Studious': ['Focus Mode', 'Study Beats', 'Concentration', 'Library Vibes', 'Brain Power'],
-  };
+  final favoritesManager = FavoritesManager();
 
   @override
   Widget build(BuildContext context) {
     final String? playlistName = ModalRoute.of(context)?.settings.arguments as String?;
-    final List<String> songs = playlistName != null 
-        ? (playlistSongs[playlistName] ?? ['Sample Song 1', 'Sample Song 2', 'Sample Song 3'])
-        : ['All Songs', 'Mixed Playlist', 'Random Tracks', 'Featured Songs', 'Popular Hits'];
+    
+    // Get songs from global playlists data
+    final List<Map<String, String>> songMaps = playlistName != null 
+        ? (globalPlaylists[playlistName] ?? [])
+        : [];
+    
+    final List<String> songs = songMaps.map((song) => song['title']!).toList();
+    
+    // If no specific playlist, show a general mix
+    if (songs.isEmpty && playlistName == null) {
+      final allSongs = <String>[];
+      globalPlaylists.values.forEach((playlist) {
+        allSongs.addAll(playlist.take(5).map((song) => song['title']!));
+      });
+      songs.addAll(allSongs.take(20));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -1039,7 +1338,7 @@ class _SongsScreenState extends State<SongsScreen> {
                         return SongRow(
                           title: songs[index],
                           isSelected: selectedSongIndex == index,
-                          isFavorite: favoriteSongs.contains(index),
+                          isFavorite: favoritesManager.isFavorite(songs[index]),
                           onTap: () {
                             setState(() {
                               selectedSongIndex = selectedSongIndex == index ? null : index;
@@ -1047,10 +1346,10 @@ class _SongsScreenState extends State<SongsScreen> {
                           },
                           onFavoriteToggle: () {
                             setState(() {
-                              if (favoriteSongs.contains(index)) {
-                                favoriteSongs.remove(index);
+                              if (favoritesManager.isFavorite(songs[index])) {
+                                favoritesManager.removeFavorite(songs[index]);
                               } else {
-                                favoriteSongs.add(index);
+                                favoritesManager.addFavorite(songs[index]);
                               }
                             });
                           },
@@ -1117,56 +1416,350 @@ class _SongsScreenState extends State<SongsScreen> {
   }
 }
 
-// Favourites Screen
-class FavouritesScreen extends StatelessWidget {
-  const FavouritesScreen({super.key});
+// Simple Favorites Manager
+class FavoritesManager {
+  static final FavoritesManager _instance = FavoritesManager._internal();
+  factory FavoritesManager() => _instance;
+  FavoritesManager._internal();
+
+  final Set<String> _favoriteSongs = {};
+
+  void addFavorite(String song) {
+    _favoriteSongs.add(song);
+  }
+
+  void removeFavorite(String song) {
+    _favoriteSongs.remove(song);
+  }
+
+  bool isFavorite(String song) {
+    return _favoriteSongs.contains(song);
+  }
+
+  List<String> get favoriteSongs => _favoriteSongs.toList();
+}
+
+// Pixel Night Sky Background with Hearts
+class PixelNightSkyBackground extends StatelessWidget {
+  final Widget child;
+
+  const PixelNightSkyBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1E1B4B), // Dark purple
+            Color(0xFF3730A3), // Medium purple
+            Color(0xFF6366F1), // Light purple
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // Twinkling stars
+              ...List.generate(20, (index) {
+                return Positioned(
+                  left: (index * 73.5) % constraints.maxWidth,
+                  top: (index * 89.7) % constraints.maxHeight,
+                  child: PixelStar(
+                    size: 4.0 + (index % 3) * 2,
+                    color: Colors.white.withOpacity(0.8 - (index % 4) * 0.15),
+                  ),
+                );
+              }),
+              // Floating hearts
+              ...List.generate(10, (index) {
+                return Positioned(
+                  left: (index * 97.3) % constraints.maxWidth,
+                  top: (index * 127.7) % constraints.maxHeight,
+                  child: FloatingHeart(
+                    size: 16.0 + (index % 2) * 8,
+                    opacity: 0.4 + (index % 3) * 0.1,
+                  ),
+                );
+              }),
+              child,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Floating Heart Widget
+class FloatingHeart extends StatelessWidget {
+  final double size;
+  final double opacity;
+
+  const FloatingHeart({super.key, required this.size, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.favorite,
+      size: size,
+      color: const Color(0xFFFDF2F8).withOpacity(opacity),
+    );
+  }
+}
+
+// Favorite Song Row Widget (simpler than SongRow)
+class FavoriteSongRow extends StatelessWidget {
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const FavoriteSongRow({
+    super.key,
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? const Color(0xFFFDF2F8).withOpacity(0.9)
+              : Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF831843)
+                : const Color(0xFFFDF2F8),
+            width: isSelected ? 3 : 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected 
+                  ? const Color(0xFF831843).withOpacity(0.3)
+                  : const Color(0xFFFDF2F8).withOpacity(0.2),
+              offset: const Offset(2, 2),
+              blurRadius: isSelected ? 4 : 2,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Music note icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF831843).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                  color: const Color(0xFF831843),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                Icons.music_note,
+                size: 16,
+                color: Color(0xFF831843),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Song title
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 10,
+                  color: const Color(0xFF374151),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Heart icon (always filled for favorites)
+            Icon(
+              Icons.favorite,
+              size: 20,
+              color: const Color(0xFF831843),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Favourites Screen
+class FavouritesScreen extends StatefulWidget {
+  const FavouritesScreen({super.key});
+
+  @override
+  State<FavouritesScreen> createState() => _FavouritesScreenState();
+}
+
+class _FavouritesScreenState extends State<FavouritesScreen> {
+  int? selectedSongIndex;
+  final favoritesManager = FavoritesManager();
+
+  @override
+  Widget build(BuildContext context) {
+    final List<String> favoriteSongs = favoritesManager.favoriteSongs;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favourites'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: PixelContainer(
-                backgroundColor: const Color(0xFFFEF7FF), // Cream
-                borderColor: const Color(0xFF7C2D12),
-                child: Center(
-                  child: Text(
-                    'Your favourite songs\nwill appear here',
-                    style: GoogleFonts.pressStart2p(
-                      fontSize: 12,
-                      color: const Color(0xFF7C2D12),
-                    ),
-                    textAlign: TextAlign.center,
+      extendBodyBehindAppBar: true,
+      body: PixelNightSkyBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Header
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  borderColor: const Color(0xFF831843),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        size: 24,
+                        color: const Color(0xFF831843),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Your Favorite Songs',
+                              style: GoogleFonts.pressStart2p(
+                                fontSize: 12,
+                                color: const Color(0xFF831843),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${favoriteSongs.length} songs',
+                              style: GoogleFonts.pressStart2p(
+                                fontSize: 8,
+                                color: const Color(0xFF374151),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                PixelButton(
-                  text: '← Songs',
-                  backgroundColor: const Color(0xFFF0F9FF),
-                  textColor: const Color(0xFF1E40AF),
-                  onPressed: () => Navigator.pushNamed(context, '/songs'),
+                const SizedBox(height: 16),
+                
+                // Favorites list or empty state
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF831843),
+                        width: 2,
+                      ),
+                    ),
+                    child: favoriteSongs.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.favorite_border,
+                                  size: 48,
+                                  color: const Color(0xFF831843).withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No favorite songs yet\n\nGo to Songs and tap the\nheart button to add favorites!',
+                                  style: GoogleFonts.pressStart2p(
+                                    fontSize: 10,
+                                    color: const Color(0xFF831843).withOpacity(0.7),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(8),
+                            itemCount: favoriteSongs.length,
+                            itemBuilder: (context, index) {
+                              return FavoriteSongRow(
+                                title: favoriteSongs[index],
+                                isSelected: selectedSongIndex == index,
+                                onTap: () {
+                                  setState(() {
+                                    selectedSongIndex = selectedSongIndex == index ? null : index;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                  ),
                 ),
-                PixelButton(
-                  text: 'Player →',
-                  backgroundColor: const Color(0xFFE8D5FF),
-                  textColor: const Color(0xFF6B46C1),
-                  onPressed: () => Navigator.pushNamed(context, '/player'),
+                
+                const SizedBox(height: 16),
+                
+                // Play Music button
+                BigActionButton(
+                  text: 'Play Music',
+                  enabled: selectedSongIndex != null && favoriteSongs.isNotEmpty,
+                  backgroundColor: const Color(0xFFFDF2F8),
+                  textColor: const Color(0xFF831843),
+                  borderColor: const Color(0xFF831843),
+                  onPressed: (selectedSongIndex != null && favoriteSongs.isNotEmpty) ? () {
+                    Navigator.pushNamed(
+                      context, 
+                      '/player',
+                      arguments: favoriteSongs[selectedSongIndex!],
+                    );
+                  } : null,
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Navigation buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PixelButton(
+                      text: '← Songs',
+                      backgroundColor: const Color(0xFFF0F9FF),
+                      textColor: const Color(0xFF1E40AF),
+                      onPressed: () => Navigator.pushNamed(context, '/songs'),
+                    ),
+                    PixelButton(
+                      text: 'Player →',
+                      backgroundColor: const Color(0xFFE8D5FF),
+                      textColor: const Color(0xFF6B46C1),
+                      onPressed: () => Navigator.pushNamed(context, '/player'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
