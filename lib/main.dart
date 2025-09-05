@@ -667,34 +667,307 @@ class PlaylistsScreen extends StatelessWidget {
   }
 }
 
-// Songs Screen
-class SongsScreen extends StatelessWidget {
-  const SongsScreen({super.key});
+// Pixel Cloud Background with Stars
+class PixelCloudBackground extends StatelessWidget {
+  final Widget child;
+
+  const PixelCloudBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    // Get the playlist name from navigation arguments
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF0F9FF), // Light blue
+            Color(0xFFE8D5FF), // Lavender
+            Color(0xFFFEF7FF), // Cream
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // Pixel clouds
+              ...List.generate(8, (index) {
+                return Positioned(
+                  left: (index * 89.5) % constraints.maxWidth,
+                  top: (index * 123.7) % (constraints.maxHeight * 0.6),
+                  child: PixelCloud(
+                    size: 40.0 + (index % 3) * 20,
+                    opacity: 0.3 + (index % 3) * 0.1,
+                  ),
+                );
+              }),
+              // Pixel stars
+              ...List.generate(12, (index) {
+                return Positioned(
+                  left: (index * 67.3) % constraints.maxWidth,
+                  top: (index * 91.7) % constraints.maxHeight,
+                  child: PixelStar(
+                    size: 6.0 + (index % 2) * 4,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
+                );
+              }),
+              child,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Pixel Cloud Widget
+class PixelCloud extends StatelessWidget {
+  final double size;
+  final double opacity;
+
+  const PixelCloud({super.key, required this.size, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size * 0.6,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(opacity),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+    );
+  }
+}
+
+// Song Row Widget
+class SongRow extends StatefulWidget {
+  final String title;
+  final bool isSelected;
+  final bool isFavorite;
+  final VoidCallback onTap;
+  final VoidCallback onFavoriteToggle;
+
+  const SongRow({
+    super.key,
+    required this.title,
+    required this.isSelected,
+    required this.isFavorite,
+    required this.onTap,
+    required this.onFavoriteToggle,
+  });
+
+  @override
+  State<SongRow> createState() => _SongRowState();
+}
+
+class _SongRowState extends State<SongRow> {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: widget.isSelected 
+              ? const Color(0xFFE8D5FF).withOpacity(0.8)
+              : Colors.white.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: widget.isSelected 
+                ? const Color(0xFF6B46C1)
+                : const Color(0xFF93C5FD),
+            width: widget.isSelected ? 3 : 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.isSelected 
+                  ? const Color(0xFF6B46C1).withOpacity(0.3)
+                  : const Color(0xFF93C5FD).withOpacity(0.2),
+              offset: const Offset(2, 2),
+              blurRadius: widget.isSelected ? 4 : 2,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Music note icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E40AF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                  color: const Color(0xFF1E40AF),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                Icons.music_note,
+                size: 16,
+                color: Color(0xFF1E40AF),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Song title
+            Expanded(
+              child: Text(
+                widget.title,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 10,
+                  color: const Color(0xFF374151),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Heart favorite button
+            GestureDetector(
+              onTap: widget.onFavoriteToggle,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: widget.isFavorite 
+                      ? const Color(0xFF831843).withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(
+                    color: const Color(0xFF831843),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  size: 16,
+                  color: const Color(0xFF831843),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Big Action Button Widget
+class BigActionButton extends StatelessWidget {
+  final String text;
+  final bool enabled;
+  final VoidCallback? onPressed;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const BigActionButton({
+    super.key,
+    required this.text,
+    required this.enabled,
+    required this.onPressed,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: enabled ? [
+            BoxShadow(
+              color: borderColor.withOpacity(0.4),
+              offset: const Offset(4, 4),
+              blurRadius: 8,
+              spreadRadius: 0,
+            ),
+          ] : [],
+        ),
+        child: ElevatedButton(
+          onPressed: enabled ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: enabled 
+                ? backgroundColor 
+                : backgroundColor.withOpacity(0.5),
+            foregroundColor: enabled 
+                ? textColor 
+                : textColor.withOpacity(0.5),
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+              side: BorderSide(
+                color: enabled 
+                    ? borderColor 
+                    : borderColor.withOpacity(0.5),
+                width: 3,
+              ),
+            ),
+            elevation: 0,
+            disabledBackgroundColor: backgroundColor.withOpacity(0.3),
+            disabledForegroundColor: textColor.withOpacity(0.3),
+          ),
+          child: Text(
+            text,
+            style: GoogleFonts.pressStart2p(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Songs Screen
+class SongsScreen extends StatefulWidget {
+  const SongsScreen({super.key});
+
+  @override
+  State<SongsScreen> createState() => _SongsScreenState();
+}
+
+class _SongsScreenState extends State<SongsScreen> {
+  int? selectedSongIndex;
+  Set<int> favoriteSongs = {};
+
+  // Sample songs data based on playlist
+  Map<String, List<String>> playlistSongs = {
+    'Feminine': ['Girl Power', 'Strong Woman', 'Confidence', 'Independent', 'Fierce'],
+    'Love': ['Heart Beats', 'Sweet Dreams', 'Forever Yours', 'True Love', 'Romantic Night'],
+    'Pookie': ['Cute Vibes', 'Adorable You', 'Sweet Moments', 'Lovely Day', 'Cozy Time'],
+    'Kpop': ['Dynamic Beat', 'Seoul Nights', 'K-Star', 'Harmony Wave', 'Pop Revolution'],
+    'BLACKPINK': ['Pink Venom', 'How You Like That', 'Kill This Love', 'DDU-DU DDU-DU', 'Shut Down'],
+    'Sad': ['Lonely Heart', 'Tears Fall', 'Blue Mood', 'Empty Room', 'Rainy Days'],
+    'Mafia': ['Dark Streets', 'Underground', 'Silent Night', 'Power Play', 'Shadow Game'],
+    'Lana Del Rey': ['Video Games', 'Born to Die', 'Summertime Sadness', 'Young and Beautiful', 'West Coast'],
+    'Taylor Swift': ['Shake It Off', 'Love Story', 'Anti-Hero', 'Blank Space', 'You Belong With Me'],
+    'Okay Not To Be Okay': ['Mental Health', 'Self Care', 'Its Okay', 'Healing Time', 'Better Days'],
+    'Studious': ['Focus Mode', 'Study Beats', 'Concentration', 'Library Vibes', 'Brain Power'],
+  };
+
+  @override
+  Widget build(BuildContext context) {
     final String? playlistName = ModalRoute.of(context)?.settings.arguments as String?;
-    
+    final List<String> songs = playlistName != null 
+        ? (playlistSongs[playlistName] ?? ['Sample Song 1', 'Sample Song 2', 'Sample Song 3'])
+        : ['All Songs', 'Mixed Playlist', 'Random Tracks', 'Featured Songs', 'Popular Hits'];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(playlistName != null ? playlistName : 'Songs'),
+        title: Text(playlistName ?? 'All Songs'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0F9FF), // Light blue
-              Color(0xFFE8D5FF), // Lavender
-            ],
-          ),
-        ),
+      body: PixelCloudBackground(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -735,41 +1008,90 @@ class SongsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                        Text(
+                          '${songs.length} songs',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 8,
+                            color: const Color(0xFF374151),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
+                
+                // Songs list
                 Expanded(
-                  child: PixelContainer(
-                    backgroundColor: const Color(0xFFF0F9FF), // Light blue
-                    borderColor: const Color(0xFF1E40AF),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.queue_music,
-                            size: 48,
-                            color: const Color(0xFF1E40AF),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            playlistName != null 
-                                ? 'Songs from $playlistName\nwill appear here'
-                                : 'Your song library\nwill appear here',
-                            style: GoogleFonts.pressStart2p(
-                              fontSize: 12,
-                              color: const Color(0xFF1E40AF),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF93C5FD),
+                        width: 2,
                       ),
+                    ),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: songs.length,
+                      itemBuilder: (context, index) {
+                        return SongRow(
+                          title: songs[index],
+                          isSelected: selectedSongIndex == index,
+                          isFavorite: favoriteSongs.contains(index),
+                          onTap: () {
+                            setState(() {
+                              selectedSongIndex = selectedSongIndex == index ? null : index;
+                            });
+                          },
+                          onFavoriteToggle: () {
+                            setState(() {
+                              if (favoriteSongs.contains(index)) {
+                                favoriteSongs.remove(index);
+                              } else {
+                                favoriteSongs.add(index);
+                              }
+                            });
+                          },
+                        );
+                      },
                     ),
                   ),
                 ),
+                
                 const SizedBox(height: 16),
+                
+                // Big action buttons
+                Row(
+                  children: [
+                    BigActionButton(
+                      text: 'Play Selected',
+                      enabled: selectedSongIndex != null,
+                      backgroundColor: const Color(0xFFE8D5FF),
+                      textColor: const Color(0xFF6B46C1),
+                      borderColor: const Color(0xFF6B46C1),
+                      onPressed: selectedSongIndex != null ? () {
+                        Navigator.pushNamed(context, '/player');
+                      } : null,
+                    ),
+                    const SizedBox(width: 16),
+                    BigActionButton(
+                      text: 'Check Favourites',
+                      enabled: true,
+                      backgroundColor: const Color(0xFFFDF2F8),
+                      textColor: const Color(0xFF831843),
+                      borderColor: const Color(0xFF831843),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/favourites');
+                      },
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Navigation buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -779,10 +1101,10 @@ class SongsScreen extends StatelessWidget {
                       onPressed: () => Navigator.pushNamed(context, '/playlists'),
                     ),
                     PixelButton(
-                      text: 'Favourites →',
-                      backgroundColor: const Color(0xFFFEF7FF),
-                      textColor: const Color(0xFF7C2D12),
-                      onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                      text: 'Player →',
+                      backgroundColor: const Color(0xFFE8D5FF),
+                      textColor: const Color(0xFF6B46C1),
+                      onPressed: () => Navigator.pushNamed(context, '/player'),
                     ),
                   ],
                 ),
