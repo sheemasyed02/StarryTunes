@@ -1445,7 +1445,7 @@ class _SongsScreenState extends State<SongsScreen> {
                               if (favoritesManager.isFavorite(song['title']!)) {
                                 favoritesManager.removeFavorite(song['title']!);
                               } else {
-                                favoritesManager.addFavorite(song['title']!);
+                                favoritesManager.addFavorite(song['title']!, song);
                               }
                             });
                           },
@@ -1517,27 +1517,51 @@ class _SongsScreenState extends State<SongsScreen> {
   }
 }
 
-// Simple Favorites Manager
+// Enhanced Favorites Manager
 class FavoritesManager {
   static final FavoritesManager _instance = FavoritesManager._internal();
   factory FavoritesManager() => _instance;
   FavoritesManager._internal();
 
-  final Set<String> _favoriteSongs = {};
+  final Set<String> _favoriteSongTitles = {};
+  final Map<String, Map<String, String>> _favoriteSongData = {};
 
-  void addFavorite(String song) {
-    _favoriteSongs.add(song);
+  void addFavorite(String songTitle, [Map<String, String>? songData]) {
+    _favoriteSongTitles.add(songTitle);
+    if (songData != null) {
+      _favoriteSongData[songTitle] = songData;
+    } else {
+      // Find the song data from global playlists
+      for (final playlist in globalPlaylists.values) {
+        for (final song in playlist) {
+          if (song['title'] == songTitle) {
+            _favoriteSongData[songTitle] = song;
+            break;
+          }
+        }
+      }
+    }
   }
 
-  void removeFavorite(String song) {
-    _favoriteSongs.remove(song);
+  void removeFavorite(String songTitle) {
+    _favoriteSongTitles.remove(songTitle);
+    _favoriteSongData.remove(songTitle);
   }
 
-  bool isFavorite(String song) {
-    return _favoriteSongs.contains(song);
+  bool isFavorite(String songTitle) {
+    return _favoriteSongTitles.contains(songTitle);
   }
 
-  List<String> get favoriteSongs => _favoriteSongs.toList();
+  List<String> get favoriteSongs => _favoriteSongTitles.toList();
+  
+  List<Map<String, String>> get favoriteSongData => 
+      _favoriteSongTitles.map((title) => 
+          _favoriteSongData[title] ?? {'title': title, 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'}
+      ).toList();
+  
+  Map<String, String>? getSongData(String title) {
+    return _favoriteSongData[title];
+  }
 }
 
 // Pixel Night Sky Background with Hearts
@@ -1713,7 +1737,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> favoriteSongs = favoritesManager.favoriteSongs;
+    final List<Map<String, String>> favoriteSongs = favoritesManager.favoriteSongData;
 
     return Scaffold(
       appBar: AppBar(
@@ -1806,8 +1830,9 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                             padding: const EdgeInsets.all(8),
                             itemCount: favoriteSongs.length,
                             itemBuilder: (context, index) {
+                              final song = favoriteSongs[index];
                               return FavoriteSongRow(
-                                title: favoriteSongs[index],
+                                title: song['title'] ?? 'Unknown Song',
                                 isSelected: selectedSongIndex == index,
                                 onTap: () {
                                   setState(() {
