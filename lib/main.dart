@@ -292,9 +292,10 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    '🎧',
-                    style: TextStyle(fontSize: 120),
+                  child: Icon(
+                    Icons.headset,
+                    size: 120,
+                    color: const Color(0xFF6B46C1),
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -377,9 +378,204 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Pixel Music Background with Floating Notes
+class PixelMusicBackground extends StatelessWidget {
+  final Widget child;
+
+  const PixelMusicBackground({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFF0F9FF), // Light blue
+            Color(0xFFE8D5FF), // Lavender
+            Color(0xFFFDF2F8), // Pink
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // Floating pixel music notes
+              ...List.generate(12, (index) {
+                return Positioned(
+                  left: (index * 67.5) % constraints.maxWidth,
+                  top: (index * 89.3) % constraints.maxHeight,
+                  child: PixelMusicNote(
+                    size: index % 3 == 0 ? 16.0 : 12.0,
+                    rotation: (index * 30.0) % 360,
+                  ),
+                );
+              }),
+              child,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Pixel Music Note Widget
+class PixelMusicNote extends StatelessWidget {
+  final double size;
+  final double rotation;
+
+  const PixelMusicNote({super.key, required this.size, required this.rotation});
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotation * 3.14159 / 180,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6B46C1).withOpacity(0.2),
+              blurRadius: 2,
+              offset: const Offset(1, 1),
+            ),
+          ],
+        ),
+        child: Container(
+          width: size * 0.6,
+          height: size * 0.6,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Playlist Card Widget
+class PlaylistCard extends StatefulWidget {
+  final String title;
+  final String icon;
+  final Color borderColor;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+
+  const PlaylistCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.borderColor,
+    required this.backgroundColor,
+    required this.onTap,
+  });
+
+  @override
+  State<PlaylistCard> createState() => _PlaylistCardState();
+}
+
+class _PlaylistCardState extends State<PlaylistCard> {
+  bool isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => isPressed = true),
+      onTapUp: (_) => setState(() => isPressed = false),
+      onTapCancel: () => setState(() => isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: widget.backgroundColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: widget.borderColor,
+            width: isPressed ? 4 : 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.borderColor.withOpacity(0.3),
+              offset: isPressed ? const Offset(2, 2) : const Offset(4, 4),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Playlist icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: widget.borderColor,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  widget.icon,
+                  style: GoogleFonts.pressStart2p(
+                    fontSize: 12,
+                    color: widget.borderColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Playlist title
+            Expanded(
+              child: Text(
+                widget.title,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: const Color(0xFF374151),
+                ),
+              ),
+            ),
+            // Arrow indicator
+            Icon(
+              Icons.chevron_right,
+              color: widget.borderColor,
+              size: 24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // Playlists Screen
 class PlaylistsScreen extends StatelessWidget {
   const PlaylistsScreen({super.key});
+
+  // Playlist data with icons and colors
+  final List<Map<String, dynamic>> playlists = const [
+    {'title': 'Feminine', 'icon': '⟢', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
+    {'title': 'Love', 'icon': '♡', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
+    {'title': 'Pookie', 'icon': '𐙚', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
+    {'title': 'Kpop', 'icon': '˃̵ᴗ˂̵', 'color': Color(0xFFF0F9FF), 'border': Color(0xFF1E40AF)},
+    {'title': 'BLACKPINK', 'icon': '❥', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
+    {'title': 'Sad', 'icon': 'ꕀ', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
+    {'title': 'Mafia', 'icon': '⬙', 'color': Color(0xFFFEF7FF), 'border': Color(0xFF7C2D12)},
+    {'title': 'Lana Del Rey', 'icon': '✿', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
+    {'title': 'Taylor Swift', 'icon': '⋆˚', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
+    {'title': 'Okay Not To Be Okay', 'icon': '◐', 'color': Color(0xFFF0F9FF), 'border': Color(0xFF1E40AF)},
+    {'title': 'Studious', 'icon': '﹢', 'color': Color(0xFFFEF7FF), 'border': Color(0xFF7C2D12)},
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -387,44 +583,84 @@ class PlaylistsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Playlists'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: PixelContainer(
-                backgroundColor: const Color(0xFFFDF2F8), // Pink
-                borderColor: const Color(0xFF831843),
-                child: Center(
-                  child: Text(
-                    'Your playlists\nwill appear here',
-                    style: GoogleFonts.pressStart2p(
-                      fontSize: 12,
-                      color: const Color(0xFF831843),
-                    ),
-                    textAlign: TextAlign.center,
+      extendBodyBehindAppBar: true,
+      body: PixelMusicBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header section
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  borderColor: const Color(0xFF6B46C1),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.library_music,
+                        size: 24,
+                        color: const Color(0xFF6B46C1),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Your Music Collections',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 12,
+                            color: const Color(0xFF6B46C1),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                PixelButton(
-                  text: '← Back',
-                  onPressed: () => Navigator.pop(context),
+              // Scrollable playlist cards
+              Expanded(
+                child: ListView.builder(
+                  itemCount: playlists.length,
+                  itemBuilder: (context, index) {
+                    final playlist = playlists[index];
+                    return PlaylistCard(
+                      title: playlist['title'],
+                      icon: playlist['icon'],
+                      backgroundColor: playlist['color'],
+                      borderColor: playlist['border'],
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/songs',
+                          arguments: playlist['title'],
+                        );
+                      },
+                    );
+                  },
                 ),
-                PixelButton(
-                  text: 'Songs →',
-                  backgroundColor: const Color(0xFFF0F9FF),
-                  textColor: const Color(0xFF1E40AF),
-                  onPressed: () => Navigator.pushNamed(context, '/songs'),
+              ),
+              // Bottom navigation
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PixelButton(
+                      text: '← Home',
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    PixelButton(
+                      text: 'All Songs →',
+                      backgroundColor: const Color(0xFFF0F9FF),
+                      textColor: const Color(0xFF1E40AF),
+                      onPressed: () => Navigator.pushNamed(context, '/songs'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -437,49 +673,122 @@ class SongsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get the playlist name from navigation arguments
+    final String? playlistName = ModalRoute.of(context)?.settings.arguments as String?;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Songs'),
+        title: Text(playlistName != null ? playlistName : 'Songs'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: PixelContainer(
-                backgroundColor: const Color(0xFFF0F9FF), // Light blue
-                borderColor: const Color(0xFF1E40AF),
-                child: Center(
-                  child: Text(
-                    'Your song library\nwill appear here',
-                    style: GoogleFonts.pressStart2p(
-                      fontSize: 12,
-                      color: const Color(0xFF1E40AF),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF0F9FF), // Light blue
+              Color(0xFFE8D5FF), // Lavender
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Header with playlist info
+                if (playlistName != null) ...[
+                  PixelContainer(
+                    backgroundColor: Colors.white.withOpacity(0.9),
+                    borderColor: const Color(0xFF1E40AF),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.music_note,
+                          size: 24,
+                          color: const Color(0xFF1E40AF),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Now Playing From:',
+                                style: GoogleFonts.pressStart2p(
+                                  fontSize: 8,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                playlistName,
+                                style: GoogleFonts.pressStart2p(
+                                  fontSize: 12,
+                                  color: const Color(0xFF1E40AF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Expanded(
+                  child: PixelContainer(
+                    backgroundColor: const Color(0xFFF0F9FF), // Light blue
+                    borderColor: const Color(0xFF1E40AF),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.queue_music,
+                            size: 48,
+                            color: const Color(0xFF1E40AF),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            playlistName != null 
+                                ? 'Songs from $playlistName\nwill appear here'
+                                : 'Your song library\nwill appear here',
+                            style: GoogleFonts.pressStart2p(
+                              fontSize: 12,
+                              color: const Color(0xFF1E40AF),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                PixelButton(
-                  text: '← Playlists',
-                  backgroundColor: const Color(0xFFFDF2F8),
-                  onPressed: () => Navigator.pushNamed(context, '/playlists'),
-                ),
-                PixelButton(
-                  text: 'Favourites →',
-                  backgroundColor: const Color(0xFFFEF7FF),
-                  textColor: const Color(0xFF7C2D12),
-                  onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PixelButton(
+                      text: '← Playlists',
+                      backgroundColor: const Color(0xFFFDF2F8),
+                      onPressed: () => Navigator.pushNamed(context, '/playlists'),
+                    ),
+                    PixelButton(
+                      text: 'Favourites →',
+                      backgroundColor: const Color(0xFFFEF7FF),
+                      textColor: const Color(0xFF7C2D12),
+                      onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
