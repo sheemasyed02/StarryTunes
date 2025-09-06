@@ -1249,25 +1249,42 @@ class _SongsScreenState extends State<SongsScreen> {
                       itemCount: songMaps.length,
                       itemBuilder: (context, index) {
                         final song = songMaps[index];
-                        return EnhancedSongRow(
-                          title: song['title']!,
-                          url: song['url']!,
-                          isSelected: selectedSongIndex == index,
-                          isFavorite: favoritesManager.isFavorite(song['title']!),
+                        return GestureDetector(
                           onTap: () {
                             setState(() {
                               selectedSongIndex = selectedSongIndex == index ? null : index;
                             });
                           },
-                          onFavoriteToggle: () {
-                            setState(() {
-                              if (favoritesManager.isFavorite(song['title']!)) {
-                                favoritesManager.removeFavorite(song['title']!);
-                              } else {
-                                favoritesManager.addFavorite(song['title']!, song);
-                              }
-                            });
+                          onDoubleTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/player',
+                              arguments: {
+                                'playlistName': playlistName,
+                                'songIndex': index,
+                              },
+                            );
                           },
+                          child: EnhancedSongRow(
+                            title: song['title']!,
+                            url: song['url']!,
+                            isSelected: selectedSongIndex == index,
+                            isFavorite: favoritesManager.isFavorite(song['title']!),
+                            onTap: () {
+                              setState(() {
+                                selectedSongIndex = selectedSongIndex == index ? null : index;
+                              });
+                            },
+                            onFavoriteToggle: () {
+                              setState(() {
+                                if (favoritesManager.isFavorite(song['title']!)) {
+                                  favoritesManager.removeFavorite(song['title']!);
+                                } else {
+                                  favoritesManager.addFavorite(song['title']!, song);
+                                }
+                              });
+                            },
+                          ),
                         );
                       },
                     ),
@@ -1286,11 +1303,13 @@ class _SongsScreenState extends State<SongsScreen> {
                       textColor: const Color(0xFF6B46C1),
                       borderColor: const Color(0xFF6B46C1),
                       onPressed: selectedSongIndex != null ? () {
-                        final selectedSong = songMaps[selectedSongIndex!];
                         Navigator.pushNamed(
                           context, 
                           '/player',
-                          arguments: selectedSong,
+                          arguments: {
+                            'playlistName': playlistName,
+                            'songIndex': selectedSongIndex!,
+                          },
                         );
                       } : null,
                     ),
@@ -1321,9 +1340,33 @@ class _SongsScreenState extends State<SongsScreen> {
                     ),
                     PixelButton(
                       text: 'Player →',
-                      backgroundColor: const Color(0xFFE8D5FF),
-                      textColor: const Color(0xFF6B46C1),
-                      onPressed: () => Navigator.pushNamed(context, '/player'),
+                      backgroundColor: selectedSongIndex != null 
+                          ? const Color(0xFFE8D5FF) 
+                          : const Color(0xFFF3F4F6),
+                      textColor: selectedSongIndex != null 
+                          ? const Color(0xFF6B46C1)
+                          : const Color(0xFF9CA3AF),
+                      onPressed: selectedSongIndex != null ? () {
+                        Navigator.pushNamed(
+                          context, 
+                          '/player',
+                          arguments: {
+                            'playlistName': playlistName,
+                            'songIndex': selectedSongIndex!,
+                          },
+                        );
+                      } : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Please select a song first',
+                              style: GoogleFonts.pressStart2p(fontSize: 8),
+                            ),
+                            backgroundColor: const Color(0xFF831843),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1991,26 +2034,45 @@ class _PlayerScreenState extends State<PlayerScreen> {
   bool _isPlaying = false;
   bool _isLoading = false;
   bool _isRepeat = false;
+  bool _isShuffle = false;
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
   Map<String, String>? _currentSong;
+  List<Map<String, String>> _playlist = [];
+  int _currentSongIndex = 0;
+  String? _playlistName;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    
-    // Listen to player state changes
+    _setupAudioPlayer();
+  }
+
+  void _setupAudioPlayer() {
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (mounted) {
         setState(() {
           _isPlaying = state == PlayerState.playing;
-          _isLoading = state == PlayerState.stopped && _isLoading;
+          if (state == PlayerState.stopped || state == PlayerState.completed) {
+            _isLoading = false;
+          }
         });
+        
+        print('Player state changed to: $state');
+        
+        // Handle completion
+        if (state == PlayerState.completed) {
+          if (_isRepeat) {
+            _playCurrentSong();
+          } else {
+            _playNextSong();
+          }
+        }
       }
     });
 
-    // Listen to position changes
     _audioPlayer.onPositionChanged.listen((Duration position) {
       if (mounted) {
         setState(() {
@@ -2019,28 +2081,30 @@ class _PlayerScreenState extends State<PlayerScreen> {
       }
     });
 
-    // Listen to duration changes
     _audioPlayer.onDurationChanged.listen((Duration duration) {
       if (mounted) {
         setState(() {
           _totalDuration = duration;
+          _isLoading = false;
         });
+        print('Duration set: ${_formatDuration(duration)}');
       }
     });
 
-    // Listen to completion
+    // Handle errors
     _audioPlayer.onPlayerComplete.listen((event) {
-      if (mounted) {
-        if (_isRepeat) {
-          _playCurrentSong();
-        } else {
-          setState(() {
-            _isPlaying = false;
-            _currentPosition = Duration.zero;
-          });
-        }
-      }
+      print('Audio playback completed');
+      // This is handled in onPlayerStateChanged now
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _initializeFromArguments();
+      _hasInitialized = true;
+    }
   }
 
   @override
@@ -2056,57 +2120,196 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
+  void _initializeFromArguments() {
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    
+    if (arguments is Map<String, dynamic>) {
+      _playlistName = arguments['playlistName'] as String?;
+      final songIndex = arguments['songIndex'] as int? ?? 0;
+      
+      if (_playlistName != null && globalPlaylists.containsKey(_playlistName!)) {
+        _playlist = List<Map<String, String>>.from(globalPlaylists[_playlistName!]!);
+        _currentSongIndex = songIndex.clamp(0, _playlist.length - 1);
+        _currentSong = _playlist[_currentSongIndex];
+        print('Initialized with playlist: $_playlistName, song index: $_currentSongIndex');
+        print('Current song: ${_currentSong!['title']}');
+      }
+    } else if (arguments is Map<String, String>) {
+      _currentSong = arguments;
+      _playlist = [arguments];
+      _currentSongIndex = 0;
+      print('Initialized with single song: ${_currentSong!['title']}');
+    } else if (arguments is String) {
+      _findSongInPlaylists(arguments);
+      print('Initialized by searching for song: $arguments');
+    } else {
+      print('No valid arguments provided, using fallback');
+    }
+    
+    // Fallback if nothing is set - use first song from first playlist
+    if (_currentSong == null && globalPlaylists.isNotEmpty) {
+      final firstPlaylist = globalPlaylists.entries.first;
+      _playlistName = firstPlaylist.key;
+      _playlist = List<Map<String, String>>.from(firstPlaylist.value);
+      if (_playlist.isNotEmpty) {
+        _currentSongIndex = 0;
+        _currentSong = _playlist[_currentSongIndex];
+        print('Fallback: Using first song from $_playlistName');
+      }
+    }
+    
+    // Ultimate fallback
+    if (_currentSong == null) {
+      _currentSong = {'title': 'No Music Available', 'url': ''};
+      _playlist = [_currentSong!];
+      _currentSongIndex = 0;
+      print('Ultimate fallback: No music available');
+    }
+  }
+
+  void _findSongInPlaylists(String songTitle) {
+    for (final entry in globalPlaylists.entries) {
+      final playlist = entry.value;
+      for (int i = 0; i < playlist.length; i++) {
+        if (playlist[i]['title'] == songTitle) {
+          _playlistName = entry.key;
+          _playlist = List<Map<String, String>>.from(playlist);
+          _currentSongIndex = i;
+          _currentSong = playlist[i];
+          return;
+        }
+      }
+    }
+    
+    _currentSong = {'title': songTitle, 'url': ''};
+    _playlist = [_currentSong!];
+    _currentSongIndex = 0;
+  }
+
   Future<void> _playCurrentSong() async {
-    if (_currentSong != null) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
-        
-        // Use the asset URL directly from the song data
-        final assetUrl = _currentSong!['url'] ?? '';
-        
-        if (assetUrl.isNotEmpty && assetUrl.startsWith('assets/')) {
-          print('Playing local asset: $assetUrl');
-          await _audioPlayer.play(AssetSource(assetUrl.replaceFirst('assets/', '')));
-        } else {
-          print('No valid asset URL found, using fallback: $assetUrl');
+    if (_currentSong == null) return;
+    
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      await _audioPlayer.stop();
+      
+      final assetUrl = _currentSong!['url'] ?? '';
+      
+      if (assetUrl.isNotEmpty) {
+        if (assetUrl.startsWith('assets/')) {
+          // Remove 'assets/' prefix for AssetSource
+          final assetPath = assetUrl.substring(7); // Remove 'assets/' (7 characters)
+          print('Playing local asset: $assetPath (from $assetUrl)');
+          await _audioPlayer.play(AssetSource(assetPath));
+        } else if (assetUrl.startsWith('http')) {
+          print('Playing URL: $assetUrl');
           await _audioPlayer.play(UrlSource(assetUrl));
+        } else {
+          // Assume it's a direct asset path
+          print('Playing direct asset: $assetUrl');
+          await _audioPlayer.play(AssetSource(assetUrl));
         }
         
+        // Set release mode after successful play
         if (_isRepeat) {
           await _audioPlayer.setReleaseMode(ReleaseMode.loop);
         } else {
           await _audioPlayer.setReleaseMode(ReleaseMode.release);
         }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Error playing audio: ${e.toString()}',
-                style: GoogleFonts.pressStart2p(fontSize: 8),
-              ),
-              backgroundColor: const Color(0xFF831843),
+      } else {
+        throw Exception('No valid audio source found - empty URL');
+      }
+      
+    } catch (e) {
+      print('Error playing audio: $e');
+      print('Current song: ${_currentSong!['title']}');
+      print('Asset URL: ${_currentSong!['url']}');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isPlaying = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cannot play: ${_currentSong!['title']}',
+              style: GoogleFonts.pressStart2p(fontSize: 8),
             ),
-          );
-        }
+            backgroundColor: const Color(0xFF831843),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     }
   }
 
   Future<void> _pauseAudio() async {
-    await _audioPlayer.pause();
+    try {
+      await _audioPlayer.pause();
+    } catch (e) {
+      print('Error pausing audio: $e');
+    }
+  }
+
+  Future<void> _resumeAudio() async {
+    try {
+      await _audioPlayer.resume();
+    } catch (e) {
+      print('Error resuming audio: $e');
+    }
   }
 
   Future<void> _stopAudio() async {
-    await _audioPlayer.stop();
+    try {
+      await _audioPlayer.stop();
+      setState(() {
+        _currentPosition = Duration.zero;
+        _isPlaying = false;
+      });
+    } catch (e) {
+      print('Error stopping audio: $e');
+    }
+  }
+
+  void _playNextSong() {
+    if (_playlist.length <= 1) return;
+    
+    if (_isShuffle) {
+      _currentSongIndex = DateTime.now().millisecondsSinceEpoch % _playlist.length;
+    } else {
+      _currentSongIndex = (_currentSongIndex + 1) % _playlist.length;
+    }
+    
     setState(() {
-      _currentPosition = Duration.zero;
+      _currentSong = _playlist[_currentSongIndex];
     });
+    
+    if (_isPlaying || _currentPosition != Duration.zero) {
+      _playCurrentSong();
+    }
+  }
+
+  void _playPreviousSong() {
+    if (_playlist.length <= 1) return;
+    
+    if (_isShuffle) {
+      _currentSongIndex = DateTime.now().millisecondsSinceEpoch % _playlist.length;
+    } else {
+      _currentSongIndex = (_currentSongIndex - 1 + _playlist.length) % _playlist.length;
+    }
+    
+    setState(() {
+      _currentSong = _playlist[_currentSongIndex];
+    });
+    
+    if (_isPlaying || _currentPosition != Duration.zero) {
+      _playCurrentSong();
+    }
   }
 
   void _toggleRepeat() {
@@ -2114,7 +2317,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _isRepeat = !_isRepeat;
     });
     
-    // Update release mode if currently playing
     if (_isPlaying) {
       if (_isRepeat) {
         _audioPlayer.setReleaseMode(ReleaseMode.loop);
@@ -2124,21 +2326,145 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Get song data from navigation arguments
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is Map<String, String> && _currentSong == null) {
-      _currentSong = arguments;
-    } else if (arguments is String && _currentSong == null) {
-      // Handle string argument (from favorites)
-      _currentSong = {'title': arguments, 'url': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'};
-    }
+  void _toggleShuffle() {
+    setState(() {
+      _isShuffle = !_isShuffle;
+    });
+  }
 
-    final songTitle = _currentSong?['title'] ?? 'No Song Selected';
+  void _seekTo(double percentage) {
+    if (_totalDuration.inMilliseconds > 0) {
+      final position = Duration(milliseconds: (_totalDuration.inMilliseconds * percentage).round());
+      _audioPlayer.seek(position);
+    }
+  }
+
+  Widget _buildProgressBar() {
     final progress = _totalDuration.inMilliseconds > 0 
         ? _currentPosition.inMilliseconds / _totalDuration.inMilliseconds 
         : 0.0;
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTapDown: (TapDownDetails details) {
+            final RenderBox box = context.findRenderObject() as RenderBox;
+            final Offset localOffset = box.globalToLocal(details.globalPosition);
+            final double percentage = (localOffset.dx / box.size.width).clamp(0.0, 1.0);
+            _seekTo(percentage);
+          },
+          child: Container(
+            height: 20,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(
+                color: const Color(0xFF6B46C1),
+                width: 2,
+              ),
+            ),
+            child: Stack(
+              children: [
+                FractionallySizedBox(
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6B46C1),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _formatDuration(_currentPosition),
+              style: GoogleFonts.pressStart2p(
+                fontSize: 8,
+                color: const Color(0xFF374151),
+              ),
+            ),
+            Text(
+              _formatDuration(_totalDuration),
+              style: GoogleFonts.pressStart2p(
+                fontSize: 8,
+                color: const Color(0xFF374151),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainPlayButton() {
+    if (_isLoading) {
+      return Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFF10B981),
+            width: 3,
+          ),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (_isPlaying) {
+          _pauseAudio();
+        } else {
+          if (_currentPosition == Duration.zero) {
+            _playCurrentSong();
+          } else {
+            _resumeAudio();
+          }
+        }
+      },
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFF10B981),
+            width: 3,
+          ),
+        ),
+        child: Icon(
+          _isPlaying ? Icons.pause : Icons.play_arrow,
+          size: 28,
+          color: const Color(0xFF10B981),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final songTitle = _currentSong?['title'] ?? 'No Song Selected';
+    final hasMultipleSongs = _playlist.length > 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -2146,30 +2472,48 @@ class _PlayerScreenState extends State<PlayerScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       extendBodyBehindAppBar: true,
       body: PixelCassetteBackground(
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Song title display
+                const SizedBox(height: 20),
+                
+                // Song info display
                 PixelContainer(
                   backgroundColor: Colors.white.withOpacity(0.9),
                   borderColor: const Color(0xFF6B46C1),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.album,
-                        size: 48,
-                        color: const Color(0xFF6B46C1),
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6B46C1).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF6B46C1),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.music_note,
+                          size: 40,
+                          color: Color(0xFF6B46C1),
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Text(
                         'Now Playing',
                         style: GoogleFonts.pressStart2p(
-                          fontSize: 10,
+                          fontSize: 8,
                           color: const Color(0xFF374151),
                         ),
                       ),
@@ -2177,78 +2521,100 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       Text(
                         songTitle,
                         style: GoogleFonts.pressStart2p(
-                          fontSize: 14,
+                          fontSize: 10,
                           color: const Color(0xFF6B46C1),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (hasMultipleSongs) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_currentSongIndex + 1} of ${_playlist.length}',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 6,
+                            color: const Color(0xFF374151),
+                          ),
+                        ),
+                      ],
+                      if (_playlistName != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'from $_playlistName',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 6,
+                            color: const Color(0xFF374151),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
                 
                 // Progress bar
                 PixelContainer(
                   backgroundColor: Colors.white.withOpacity(0.8),
                   borderColor: const Color(0xFF6B46C1),
-                  child: PixelProgressBar(
-                    progress: progress.clamp(0.0, 1.0),
-                    currentTime: _formatDuration(_currentPosition),
-                    totalTime: _formatDuration(_totalDuration),
-                  ),
+                  child: _buildProgressBar(),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
                 
-                // Playback controls
+                // Main playback controls
                 PixelContainer(
                   backgroundColor: Colors.white.withOpacity(0.8),
                   borderColor: const Color(0xFF6B46C1),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      // Previous button
+                      PlayerControlButton(
+                        icon: Icons.skip_previous,
+                        onPressed: hasMultipleSongs ? _playPreviousSong : () {},
+                        color: hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey,
+                      ),
+                      
+                      // Play/Pause button
+                      _buildMainPlayButton(),
+                      
+                      // Next button
+                      PlayerControlButton(
+                        icon: Icons.skip_next,
+                        onPressed: hasMultipleSongs ? _playNextSong : () {},
+                        color: hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Secondary controls
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.8),
+                  borderColor: const Color(0xFF6B46C1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Shuffle button
+                      PlayerControlButton(
+                        icon: Icons.shuffle,
+                        onPressed: hasMultipleSongs ? _toggleShuffle : () {},
+                        color: _isShuffle ? const Color(0xFFEAB308) : 
+                               (hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey),
+                        isActive: _isShuffle,
+                      ),
+                      
                       // Stop button
                       PlayerControlButton(
                         icon: Icons.stop,
                         onPressed: _stopAudio,
                         color: const Color(0xFF831843),
                       ),
-                      // Play/Pause button
-                      _isLoading
-                          ? Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: const Color(0xFF6B46C1),
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF6B46C1),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : PlayerControlButton(
-                              icon: _isPlaying ? Icons.pause : Icons.play_arrow,
-                              onPressed: _isPlaying ? _pauseAudio : _playCurrentSong,
-                              backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
-                              color: const Color(0xFF10B981),
-                              isActive: _isPlaying,
-                            ),
+                      
                       // Repeat button
                       PlayerControlButton(
                         icon: Icons.repeat,
@@ -2260,28 +2626,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                 ),
                 
-                const Spacer(),
+                const SizedBox(height: 24),
                 
                 // Navigation buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    PixelButton(
-                      text: '← Favourites',
-                      backgroundColor: const Color(0xFFFEF7FF),
-                      textColor: const Color(0xFF7C2D12),
-                      onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                    Expanded(
+                      child: PixelButton(
+                        text: '← Playlists',
+                        backgroundColor: const Color(0xFFE8D5FF),
+                        textColor: const Color(0xFF6B46C1),
+                        onPressed: () => Navigator.pushReplacementNamed(context, '/playlists'),
+                      ),
                     ),
-                    PixelButton(
-                      text: 'Home',
-                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/',
-                        (route) => false,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: PixelButton(
+                        text: 'Home',
+                        backgroundColor: const Color(0xFFF0F9FF),
+                        textColor: const Color(0xFF1E40AF),
+                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/',
+                          (route) => false,
+                        ),
                       ),
                     ),
                   ],
                 ),
+                
+                const SizedBox(height: 20),
               ],
             ),
           ),
