@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'music_service.dart';
 
 // Global playlists data with your custom songs
 final Map<String, List<Map<String, String>>> globalPlaylists = {
@@ -681,23 +680,16 @@ class _PlaylistCardState extends State<PlaylistCard> {
 class PlaylistsScreen extends StatelessWidget {
   const PlaylistsScreen({super.key});
 
-  // Playlist data with icons and colors
-  final List<Map<String, dynamic>> playlists = const [
-    {'title': 'Feminine', 'icon': '⟢', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
-    {'title': 'Love', 'icon': '♡', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
-    {'title': 'Pookie', 'icon': '𐙚', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
-    {'title': 'Kpop', 'icon': '˃̵ᴗ˂̵', 'color': Color(0xFFF0F9FF), 'border': Color(0xFF1E40AF)},
-    {'title': 'BLACKPINK', 'icon': '❥', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
-    {'title': 'Sad', 'icon': 'ꕀ', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
-    {'title': 'Mafia', 'icon': '⬙', 'color': Color(0xFFFEF7FF), 'border': Color(0xFF7C2D12)},
-    {'title': 'Lana Del Rey', 'icon': '✿', 'color': Color(0xFFE8D5FF), 'border': Color(0xFF6B46C1)},
-    {'title': 'Taylor Swift', 'icon': '⋆˚', 'color': Color(0xFFFDF2F8), 'border': Color(0xFF831843)},
-    {'title': 'Okay Not To Be Okay', 'icon': '◐', 'color': Color(0xFFF0F9FF), 'border': Color(0xFF1E40AF)},
-    {'title': 'Studious', 'icon': '﹢', 'color': Color(0xFFFEF7FF), 'border': Color(0xFF7C2D12)},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    // Generate playlist display data from globalPlaylists
+    final List<Map<String, dynamic>> playlists = [
+      {'title': 'Femanine', 'icon': '⟢', 'color': const Color(0xFFFDF2F8), 'border': const Color(0xFF831843)},
+      {'title': 'K-pop', 'icon': '˃̵ᴗ˂̵', 'color': const Color(0xFFF0F9FF), 'border': const Color(0xFF1E40AF)},
+      {'title': 'Sad', 'icon': 'ꕀ', 'color': const Color(0xFFE8D5FF), 'border': const Color(0xFF6B46C1)},
+      {'title': 'Fresh Vibes', 'icon': '✧', 'color': const Color(0xFFF0FDF4), 'border': const Color(0xFF059669)},
+      {'title': 'Custom Playlist', 'icon': '♪', 'color': const Color(0xFFFEF7FF), 'border': const Color(0xFF7C2D12)},
+    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Playlists'),
@@ -918,29 +910,15 @@ class _EnhancedSongRowState extends State<EnhancedSongRow> {
           _isLoading = true;
         });
         
-        // Use MusicService to get real audio URL
-        final audioUrl = await MusicService.getSongAudioUrl(widget.title);
+        // Use the asset URL directly from the playlist data
+        final assetUrl = widget.url;
         
-        if (audioUrl != null) {
-          print('Playing real audio URL: $audioUrl');
-          await _audioPlayer.play(UrlSource(audioUrl));
+        if (assetUrl.isNotEmpty && assetUrl.startsWith('assets/')) {
+          print('Playing local asset: $assetUrl');
+          await _audioPlayer.play(AssetSource(assetUrl.replaceFirst('assets/', '')));
         } else {
-          // Fallback to demo URL if API fails
-          print('API failed, using fallback URL: ${widget.url}');
-          await _audioPlayer.play(UrlSource(widget.url));
-          
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Using demo audio - API unavailable',
-                  style: GoogleFonts.pressStart2p(fontSize: 8),
-                ),
-                backgroundColor: const Color(0xFFFF9800),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+          print('No valid asset URL found, using fallback: $assetUrl');
+          await _audioPlayer.play(UrlSource(assetUrl));
         }
       }
     } catch (e) {
@@ -2085,33 +2063,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
           _isLoading = true;
         });
         
-        // Try to get real audio URL from API
-        final songTitle = _currentSong!['title'] ?? 'Unknown Song';
-        final audioUrl = await MusicService.getSongAudioUrl(songTitle);
+        // Use the asset URL directly from the song data
+        final assetUrl = _currentSong!['url'] ?? '';
         
-        String urlToPlay;
-        if (audioUrl != null) {
-          print('Playing real audio URL for "$songTitle": $audioUrl');
-          urlToPlay = audioUrl;
+        if (assetUrl.isNotEmpty && assetUrl.startsWith('assets/')) {
+          print('Playing local asset: $assetUrl');
+          await _audioPlayer.play(AssetSource(assetUrl.replaceFirst('assets/', '')));
         } else {
-          print('API failed for "$songTitle", using fallback URL: ${_currentSong!['url']!}');
-          urlToPlay = _currentSong!['url']!;
-          
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Using demo audio - API unavailable',
-                  style: GoogleFonts.pressStart2p(fontSize: 8),
-                ),
-                backgroundColor: const Color(0xFFFF9800),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+          print('No valid asset URL found, using fallback: $assetUrl');
+          await _audioPlayer.play(UrlSource(assetUrl));
         }
         
-        await _audioPlayer.play(UrlSource(urlToPlay));
         if (_isRepeat) {
           await _audioPlayer.setReleaseMode(ReleaseMode.loop);
         } else {
