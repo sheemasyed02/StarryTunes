@@ -1603,45 +1603,68 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favourites'),
+        title: Text(
+          'Favourites',
+          style: GoogleFonts.pressStart2p(
+            fontSize: 14,
+            color: const Color(0xFF6B46C1),
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF6B46C1)),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       extendBodyBehindAppBar: true,
-      body: PixelNightSkyBackground(
+      body: PixelCassetteBackground(
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Header
+                const SizedBox(height: 20),
+                
+                // Header with pixel design
                 PixelContainer(
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  borderColor: const Color(0xFF831843),
+                  backgroundColor: const Color(0xFFE8D5FF).withOpacity(0.9),
+                  borderColor: const Color(0xFF6B46C1),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.favorite,
-                        size: 24,
-                        color: const Color(0xFF831843),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6B46C1).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF6B46C1),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.favorite,
+                          size: 24,
+                          color: Color(0xFF6B46C1),
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Your Favorite Songs',
+                              'Your Favorites',
                               style: GoogleFonts.pressStart2p(
                                 fontSize: 12,
-                                color: const Color(0xFF831843),
+                                color: const Color(0xFF6B46C1),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${favoriteSongs.length} songs',
+                              '${favoriteSongs.length} saved songs',
                               style: GoogleFonts.pressStart2p(
                                 fontSize: 8,
                                 color: const Color(0xFF374151),
@@ -1650,38 +1673,72 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           ],
                         ),
                       ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6B46C1).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: const Color(0xFF6B46C1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          '♪',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 12,
+                            color: const Color(0xFF6B46C1),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
                 
-                // Favorites list or empty state
-                Expanded(
+                const SizedBox(height: 20),
+                
+                // Favorites list or empty state with pixel design
+                PixelContainer(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  borderColor: const Color(0xFF6B46C1),
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: const Color(0xFF831843),
-                        width: 2,
-                      ),
-                    ),
+                    height: 400,
                     child: favoriteSongs.isEmpty
                         ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.favorite_border,
-                                  size: 48,
-                                  color: const Color(0xFF831843).withOpacity(0.5),
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6B46C1).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFF6B46C1),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.favorite_border,
+                                    size: 32,
+                                    color: Color(0xFF6B46C1),
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'No favorite songs yet\n\nGo to Songs and tap the\nheart button to add favorites!',
+                                  'No favorites yet!',
                                   style: GoogleFonts.pressStart2p(
-                                    fontSize: 10,
-                                    color: const Color(0xFF831843).withOpacity(0.7),
+                                    fontSize: 12,
+                                    color: const Color(0xFF6B46C1),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Go to playlists and tap ♡\nto add songs here',
+                                  style: GoogleFonts.pressStart2p(
+                                    fontSize: 8,
+                                    color: const Color(0xFF374151),
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -1693,58 +1750,127 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                             itemCount: favoriteSongs.length,
                             itemBuilder: (context, index) {
                               final song = favoriteSongs[index];
-                              return FavoriteSongRow(
-                                title: song['title'] ?? 'Unknown Song',
-                                isSelected: selectedSongIndex == index,
-                                onTap: () {
-                                  setState(() {
-                                    selectedSongIndex = selectedSongIndex == index ? null : index;
-                                  });
-                                },
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: selectedSongIndex == index 
+                                      ? const Color(0xFF6B46C1).withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: selectedSongIndex == index 
+                                        ? const Color(0xFF6B46C1)
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ListTile(
+                                  leading: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6B46C1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: const Color(0xFF6B46C1),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      size: 16,
+                                      color: Color(0xFF6B46C1),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    song['title'] ?? 'Unknown Song',
+                                    style: GoogleFonts.pressStart2p(
+                                      fontSize: 8,
+                                      color: const Color(0xFF374151),
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: Icon(
+                                    Icons.favorite,
+                                    color: const Color(0xFF831843),
+                                    size: 16,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSongIndex = selectedSongIndex == index ? null : index;
+                                    });
+                                  },
+                                ),
                               );
                             },
                           ),
                   ),
                 ),
                 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 
-                // Play Music button
-                BigActionButton(
-                  text: 'Play Music',
-                  enabled: selectedSongIndex != null && favoriteSongs.isNotEmpty,
-                  backgroundColor: const Color(0xFFFDF2F8),
-                  textColor: const Color(0xFF831843),
-                  borderColor: const Color(0xFF831843),
-                  onPressed: (selectedSongIndex != null && favoriteSongs.isNotEmpty) ? () {
-                    Navigator.pushNamed(
-                      context, 
-                      '/player',
-                      arguments: favoriteSongs[selectedSongIndex!],
-                    );
-                  } : null,
-                ),
-                
-                const SizedBox(height: 16),
+                // Action buttons with pixel design
+                if (favoriteSongs.isNotEmpty) ...[
+                  PixelButton(
+                    text: selectedSongIndex != null ? 'Play Selected ♪' : 'Select a Song First',
+                    backgroundColor: selectedSongIndex != null 
+                        ? const Color(0xFFE8D5FF)
+                        : const Color(0xFFF3F4F6),
+                    textColor: selectedSongIndex != null 
+                        ? const Color(0xFF6B46C1)
+                        : const Color(0xFF9CA3AF),
+                    onPressed: selectedSongIndex != null ? () {
+                      Navigator.pushNamed(
+                        context, 
+                        '/player',
+                        arguments: favoriteSongs[selectedSongIndex!],
+                      );
+                    } : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Please select a favorite song first',
+                            style: GoogleFonts.pressStart2p(fontSize: 8),
+                          ),
+                          backgroundColor: const Color(0xFF831843),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 
                 // Navigation buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    PixelButton(
-                      text: '← Songs',
-                      backgroundColor: const Color(0xFFF0F9FF),
-                      textColor: const Color(0xFF1E40AF),
-                      onPressed: () => Navigator.pushNamed(context, '/songs'),
+                    Expanded(
+                      child: PixelButton(
+                        text: '← Playlists',
+                        backgroundColor: const Color(0xFFF0F9FF),
+                        textColor: const Color(0xFF1E40AF),
+                        onPressed: () => Navigator.pushReplacementNamed(context, '/playlists'),
+                      ),
                     ),
-                    PixelButton(
-                      text: 'Player →',
-                      backgroundColor: const Color(0xFFE8D5FF),
-                      textColor: const Color(0xFF6B46C1),
-                      onPressed: () => Navigator.pushNamed(context, '/player'),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: PixelButton(
+                        text: 'Home',
+                        backgroundColor: const Color(0xFFE8D5FF),
+                        textColor: const Color(0xFF6B46C1),
+                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/',
+                          (route) => false,
+                        ),
+                      ),
                     ),
                   ],
                 ),
+                
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -2194,7 +2320,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _isLoading = true;
       });
       
+      // Always stop any currently playing audio first
       await _audioPlayer.stop();
+      
+      // Small delay to ensure the previous song is fully stopped
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final assetUrl = _currentSong!['url'] ?? '';
       
@@ -2251,6 +2381,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _pauseAudio() async {
     try {
       await _audioPlayer.pause();
+      setState(() {
+        _isPlaying = false;
+      });
     } catch (e) {
       print('Error pausing audio: $e');
     }
@@ -2259,6 +2392,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _resumeAudio() async {
     try {
       await _audioPlayer.resume();
+      setState(() {
+        _isPlaying = true;
+      });
     } catch (e) {
       print('Error resuming audio: $e');
     }
@@ -2403,14 +2539,79 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required Color color,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: onPressed != null ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: onPressed != null ? color : Colors.grey,
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          color: onPressed != null ? color : Colors.grey,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleButton({
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback? onPressed,
+    required Color activeColor,
+    required Color inactiveColor,
+  }) {
+    final color = isActive ? activeColor : inactiveColor;
+    
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: isActive ? color.withOpacity(0.2) : color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: color,
+            width: isActive ? 3 : 2,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   Widget _buildMainPlayButton() {
     if (_isLoading) {
       return Container(
-        width: 64,
-        height: 64,
+        width: 72,
+        height: 72,
         decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF10B981).withOpacity(0.1),
+              const Color(0xFF6B46C1).withOpacity(0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: const Color(0xFF10B981),
             width: 3,
@@ -2418,10 +2619,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ),
         child: const Center(
           child: SizedBox(
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
             ),
           ),
@@ -2442,19 +2643,33 @@ class _PlayerScreenState extends State<PlayerScreen> {
         }
       },
       child: Container(
-        width: 64,
-        height: 64,
+        width: 72,
+        height: 72,
         decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF10B981).withOpacity(0.2),
+              const Color(0xFF6B46C1).withOpacity(0.2),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: const Color(0xFF10B981),
             width: 3,
           ),
+          boxShadow: _isPlaying ? [
+            BoxShadow(
+              color: const Color(0xFF10B981).withOpacity(0.3),
+              blurRadius: 8,
+              spreadRadius: 2,
+            ),
+          ] : null,
         ),
         child: Icon(
           _isPlaying ? Icons.pause : Icons.play_arrow,
-          size: 28,
+          size: 32,
           color: const Color(0xFF10B981),
         ),
       ),
@@ -2468,14 +2683,38 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Player'),
+        title: Text(
+          'Music Player',
+          style: GoogleFonts.pressStart2p(
+            fontSize: 14,
+            color: const Color(0xFF6B46C1),
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF6B46C1)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Color(0xFF831843)),
+            onPressed: () {
+              // Add to favorites functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Added to favorites!',
+                    style: GoogleFonts.pressStart2p(fontSize: 8),
+                  ),
+                  backgroundColor: const Color(0xFF6B46C1),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       body: PixelCassetteBackground(
@@ -2486,30 +2725,105 @@ class _PlayerScreenState extends State<PlayerScreen> {
               children: [
                 const SizedBox(height: 20),
                 
-                // Song info display
+                // Main album art and song info
                 PixelContainer(
-                  backgroundColor: Colors.white.withOpacity(0.9),
+                  backgroundColor: const Color(0xFFE8D5FF).withOpacity(0.95),
                   borderColor: const Color(0xFF6B46C1),
                   child: Column(
                     children: [
+                      // Album art section
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: double.infinity,
+                        height: 180,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6B46C1).withOpacity(0.1),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF6B46C1).withOpacity(0.1),
+                              const Color(0xFF831843).withOpacity(0.1),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: const Color(0xFF6B46C1),
                             width: 2,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.music_note,
-                          size: 40,
-                          color: Color(0xFF6B46C1),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Cassette tape animation
+                            AnimatedBuilder(
+                              animation: _isPlaying 
+                                  ? AlwaysStoppedAnimation(1.0)
+                                  : AlwaysStoppedAnimation(0.0),
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle: _isPlaying ? DateTime.now().millisecondsSinceEpoch * 0.01 : 0,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6B46C1).withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(40),
+                                      border: Border.all(
+                                        color: const Color(0xFF6B46C1),
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.album,
+                                      size: 40,
+                                      color: Color(0xFF6B46C1),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            // Equalizer bars when playing
+                            if (_isPlaying) ...[
+                              Positioned(
+                                left: 30,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(5, (index) {
+                                    return Container(
+                                      width: 4,
+                                      height: (index + 1) * 8.0,
+                                      margin: const EdgeInsets.symmetric(vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                              Positioned(
+                                right: 30,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(5, (index) {
+                                    return Container(
+                                      width: 4,
+                                      height: (5 - index) * 8.0,
+                                      margin: const EdgeInsets.symmetric(vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      
+                      // Song info
                       Text(
                         'Now Playing',
                         style: GoogleFonts.pressStart2p(
@@ -2521,69 +2835,98 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       Text(
                         songTitle,
                         style: GoogleFonts.pressStart2p(
-                          fontSize: 10,
+                          fontSize: 12,
                           color: const Color(0xFF6B46C1),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (hasMultipleSongs) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_currentSongIndex + 1} of ${_playlist.length}',
-                          style: GoogleFonts.pressStart2p(
-                            fontSize: 6,
-                            color: const Color(0xFF374151),
-                          ),
-                        ),
-                      ],
-                      if (_playlistName != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          'from $_playlistName',
-                          style: GoogleFonts.pressStart2p(
-                            fontSize: 6,
-                            color: const Color(0xFF374151),
-                          ),
-                        ),
-                      ],
+                      const SizedBox(height: 8),
+                      
+                      // Playlist info
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (hasMultipleSongs) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6B46C1).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF6B46C1),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${_currentSongIndex + 1} / ${_playlist.length}',
+                                style: GoogleFonts.pressStart2p(
+                                  fontSize: 6,
+                                  color: const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (_playlistName != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF831843).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF831843),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _playlistName!,
+                                style: GoogleFonts.pressStart2p(
+                                  fontSize: 6,
+                                  color: const Color(0xFF831843),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
                 
                 const SizedBox(height: 20),
                 
-                // Progress bar
+                // Progress bar with enhanced design
                 PixelContainer(
-                  backgroundColor: Colors.white.withOpacity(0.8),
+                  backgroundColor: Colors.white.withOpacity(0.9),
                   borderColor: const Color(0xFF6B46C1),
                   child: _buildProgressBar(),
                 ),
                 
                 const SizedBox(height: 20),
                 
-                // Main playback controls
+                // Main playback controls with enhanced design
                 PixelContainer(
-                  backgroundColor: Colors.white.withOpacity(0.8),
+                  backgroundColor: const Color(0xFFE8D5FF).withOpacity(0.9),
                   borderColor: const Color(0xFF6B46C1),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       // Previous button
-                      PlayerControlButton(
+                      _buildControlButton(
                         icon: Icons.skip_previous,
-                        onPressed: hasMultipleSongs ? _playPreviousSong : () {},
+                        onPressed: hasMultipleSongs ? _playPreviousSong : null,
                         color: hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey,
                       ),
                       
-                      // Play/Pause button
+                      // Play/Pause button (enhanced)
                       _buildMainPlayButton(),
                       
                       // Next button
-                      PlayerControlButton(
+                      _buildControlButton(
                         icon: Icons.skip_next,
-                        onPressed: hasMultipleSongs ? _playNextSong : () {},
+                        onPressed: hasMultipleSongs ? _playNextSong : null,
                         color: hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey,
                       ),
                     ],
@@ -2592,35 +2935,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Secondary controls
+                // Secondary controls with pixel design
                 PixelContainer(
-                  backgroundColor: Colors.white.withOpacity(0.8),
+                  backgroundColor: Colors.white.withOpacity(0.9),
                   borderColor: const Color(0xFF6B46C1),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       // Shuffle button
-                      PlayerControlButton(
+                      _buildToggleButton(
                         icon: Icons.shuffle,
-                        onPressed: hasMultipleSongs ? _toggleShuffle : () {},
-                        color: _isShuffle ? const Color(0xFFEAB308) : 
-                               (hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey),
                         isActive: _isShuffle,
+                        onPressed: hasMultipleSongs ? _toggleShuffle : null,
+                        activeColor: const Color(0xFFEAB308),
+                        inactiveColor: hasMultipleSongs ? const Color(0xFF6B46C1) : Colors.grey,
                       ),
                       
                       // Stop button
-                      PlayerControlButton(
+                      _buildControlButton(
                         icon: Icons.stop,
                         onPressed: _stopAudio,
                         color: const Color(0xFF831843),
                       ),
                       
                       // Repeat button
-                      PlayerControlButton(
+                      _buildToggleButton(
                         icon: Icons.repeat,
-                        onPressed: _toggleRepeat,
-                        color: _isRepeat ? const Color(0xFFEAB308) : const Color(0xFF6B46C1),
                         isActive: _isRepeat,
+                        onPressed: _toggleRepeat,
+                        activeColor: const Color(0xFFEAB308),
+                        inactiveColor: const Color(0xFF6B46C1),
                       ),
                     ],
                   ),
@@ -2628,7 +2972,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Navigation buttons
+                // Navigation buttons with enhanced design
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -2640,7 +2984,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         onPressed: () => Navigator.pushReplacementNamed(context, '/playlists'),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: PixelButton(
+                        text: '♡ Favs',
+                        backgroundColor: const Color(0xFFFDF2F8),
+                        textColor: const Color(0xFF831843),
+                        onPressed: () => Navigator.pushNamed(context, '/favourites'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: PixelButton(
                         text: 'Home',
