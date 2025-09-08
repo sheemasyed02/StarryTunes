@@ -2,39 +2,133 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-// Simple Music Player Service for handling playback state
+// Enhanced Music Player Service with actual audio playback
 class MusicPlayerService {
   static final MusicPlayerService _instance = MusicPlayerService._internal();
   factory MusicPlayerService() => _instance;
-  MusicPlayerService._internal();
+  MusicPlayerService._internal() {
+    _initializeAudioPlayer();
+  }
 
+  late AudioPlayer _audioPlayer;
   Map<String, String>? _currentSong;
   int _currentIndex = -1;
   bool _isPlaying = false;
+  bool _isLoading = false;
   List<Map<String, String>> _currentPlaylist = [];
+  
+  // State change listeners
+  final List<VoidCallback> _stateListeners = [];
 
   // Getters
   Map<String, String>? get currentSong => _currentSong;
   int get currentIndex => _currentIndex;
   bool get isPlaying => _isPlaying;
+  bool get isLoading => _isLoading;
   List<Map<String, String>> get currentPlaylist => _currentPlaylist;
 
-  // Set current song and playlist
-  void setCurrentSong(Map<String, String> song, List<Map<String, String>> playlist, int index) {
+  // Add state listener
+  void addStateListener(VoidCallback listener) {
+    _stateListeners.add(listener);
+  }
+
+  // Remove state listener
+  void removeStateListener(VoidCallback listener) {
+    _stateListeners.remove(listener);
+  }
+
+  // Notify all listeners of state change
+  void _notifyStateChange() {
+    for (final listener in _stateListeners) {
+      listener();
+    }
+  }
+
+  void _initializeAudioPlayer() {
+    _audioPlayer = AudioPlayer();
+    
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      final wasPlaying = _isPlaying;
+      _isPlaying = state == PlayerState.playing;
+      _isLoading = state == PlayerState.paused && _isLoading; // Keep loading state until we know it's ready
+      
+      if (wasPlaying != _isPlaying) {
+        _notifyStateChange();
+      }
+    });
+  }
+
+  // Set current song and start playing
+  Future<void> setCurrentSong(Map<String, String> song, List<Map<String, String>> playlist, int index) async {
     _currentSong = song;
     _currentPlaylist = playlist;
     _currentIndex = index;
-    _isPlaying = true;
+    _notifyStateChange();
+    await _playSong();
+  }
+
+  // Play the current song
+  Future<void> _playSong() async {
+    if (_currentSong == null) return;
+    
+    try {
+      _isLoading = true;
+      _notifyStateChange();
+      
+      final assetUrl = _currentSong!['url'] ?? '';
+      
+      if (assetUrl.isNotEmpty) {
+        if (assetUrl.startsWith('assets/')) {
+          // Remove 'assets/' prefix for AssetSource
+          final assetPath = assetUrl.substring(7);
+          print('Playing asset: $assetPath');
+          await _audioPlayer.play(AssetSource(assetPath));
+        } else if (assetUrl.startsWith('http')) {
+          print('Playing URL: $assetUrl');
+          await _audioPlayer.play(UrlSource(assetUrl));
+        } else {
+          // Assume it's a direct asset path
+          print('Playing direct asset: $assetUrl');
+          await _audioPlayer.play(AssetSource(assetUrl));
+        }
+        _isPlaying = true;
+      }
+    } catch (e) {
+      print('Error playing song: $e');
+      _isPlaying = false;
+    } finally {
+      _isLoading = false;
+      _notifyStateChange();
+    }
   }
 
   // Toggle play/pause
-  void togglePlayPause() {
-    _isPlaying = !_isPlaying;
+  Future<void> togglePlayPause() async {
+    if (_currentSong == null) return;
+    
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+        _isPlaying = false;
+      } else {
+        await _audioPlayer.resume();
+        _isPlaying = true;
+      }
+      _notifyStateChange();
+    } catch (e) {
+      print('Error toggling play/pause: $e');
+    }
   }
 
   // Stop playback
-  void stop() {
-    _isPlaying = false;
+  Future<void> stop() async {
+    try {
+      await _audioPlayer.stop();
+      _isPlaying = false;
+      _notifyStateChange();
+    } catch (e) {
+      print('Error stopping playback: $e');
+    }
   }
 
   // Check if a specific song is currently playing
@@ -50,6 +144,11 @@ class MusicPlayerService {
     return _currentSong != null && 
            _currentSong!['title'] == song['title'] && 
            _currentIndex == index;
+  }
+
+  // Dispose audio player
+  void dispose() {
+    _audioPlayer.dispose();
   }
 }
 
@@ -1502,6 +1601,28 @@ class SongsScreen extends StatefulWidget {
 class _SongsScreenState extends State<SongsScreen> {
   int? selectedSongIndex;
   final favoritesManager = FavoritesManager();
+  late MusicPlayerService _musicService;
+
+  @override
+  void initState() {
+    super.initState();
+    _musicService = MusicPlayerService();
+    _musicService.addStateListener(_onMusicStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _musicService.removeStateListener(_onMusicStateChanged);
+    super.dispose();
+  }
+
+  void _onMusicStateChanged() {
+    if (mounted) {
+      setState(() {
+        // This will trigger a rebuild to update the UI with the new music state
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1777,16 +1898,26 @@ class _SongsScreenState extends State<SongsScreen> {
             ),
             // Play/Pause button with pixel styling (moved to right side)
             GestureDetector(
-              onTap: () {
+              onTap: () async {
                 final musicService = MusicPlayerService();
                 
                 if (musicService.isCurrentSong(song, index)) {
                   // If this is the current song, toggle play/pause
-                  musicService.togglePlayPause();
+                  await musicService.togglePlayPause();
                 } else {
                   // Set this as the current song and start playing
-                  final playlist = globalPlaylists.values.first.toList();
-                  musicService.setCurrentSong(song, playlist, index);
+                  final String? playlistName = ModalRoute.of(context)?.settings.arguments as String?;
+                  List<Map<String, String>> playlist;
+                  
+                  if (playlistName != null && globalPlaylists.containsKey(playlistName)) {
+                    playlist = globalPlaylists[playlistName]!;
+                  } else {
+                    // Get all songs from all playlists as fallback
+                    playlist = [];
+                    globalPlaylists.values.forEach((pl) => playlist.addAll(pl));
+                  }
+                  
+                  await musicService.setCurrentSong(song, playlist, index);
                 }
                 
                 setState(() {
