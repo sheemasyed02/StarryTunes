@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'widgets/pixel_background.dart';
 
 // Enhanced Music Player Service with actual audio playback
 class MusicPlayerService {
@@ -2282,6 +2283,28 @@ class FavouritesScreen extends StatefulWidget {
 class _FavouritesScreenState extends State<FavouritesScreen> {
   int? selectedSongIndex;
   final favoritesManager = FavoritesManager();
+  late MusicPlayerService _musicService;
+
+  @override
+  void initState() {
+    super.initState();
+    _musicService = MusicPlayerService();
+    _musicService.addStateListener(_onMusicStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _musicService.removeStateListener(_onMusicStateChanged);
+    super.dispose();
+  }
+
+  void _onMusicStateChanged() {
+    if (mounted) {
+      setState(() {
+        // This will trigger a rebuild to update the UI with the new music state
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2305,7 +2328,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
         ),
       ),
       extendBodyBehindAppBar: true,
-      body: PixelCassetteBackground(
+      body: PixelBackgrounds.heartSparkles(
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -2436,57 +2459,200 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                             itemCount: favoriteSongs.length,
                             itemBuilder: (context, index) {
                               final song = favoriteSongs[index];
+                              final isCurrentSong = _musicService.isCurrentSong(song, index);
+                              final isPlaying = _musicService.isPlaying && isCurrentSong;
+                              
                               return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: selectedSongIndex == index 
+                                  color: isCurrentSong 
                                       ? const Color(0xFF6B46C1).withOpacity(0.1)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(4),
+                                      : Colors.white.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(0), // Sharp pixel corners
                                   border: Border.all(
-                                    color: selectedSongIndex == index 
+                                    color: isCurrentSong 
                                         ? const Color(0xFF6B46C1)
-                                        : Colors.transparent,
-                                    width: 2,
+                                        : const Color(0xFF93C5FD),
+                                    width: isCurrentSong ? 4 : 3, // Thicker pixel borders
                                   ),
+                                  boxShadow: [
+                                    // Pixel art shadow layers
+                                    BoxShadow(
+                                      color: (isCurrentSong 
+                                          ? const Color(0xFF6B46C1)
+                                          : const Color(0xFF93C5FD)).withOpacity(0.4),
+                                      offset: const Offset(3, 3),
+                                      blurRadius: 0, // No blur for pixel art
+                                    ),
+                                    BoxShadow(
+                                      color: (isCurrentSong 
+                                          ? const Color(0xFF6B46C1)
+                                          : const Color(0xFF93C5FD)).withOpacity(0.2),
+                                      offset: const Offset(1, 1),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
                                 ),
-                                child: ListTile(
-                                  leading: Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF6B46C1).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: const Color(0xFF6B46C1),
-                                        width: 1,
+                                child: Row(
+                                  children: [
+                                    // Song info section
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            song['title'] ?? 'Unknown Song',
+                                            style: GoogleFonts.pressStart2p(
+                                              fontSize: 10,
+                                              color: isCurrentSong 
+                                                  ? const Color(0xFF6B46C1)
+                                                  : const Color(0xFF374151),
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 0.5, // Pixel art letter spacing
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            song['artist'] ?? 'Unknown Artist',
+                                            style: GoogleFonts.pressStart2p(
+                                              fontSize: 8,
+                                              color: const Color(0xFF6B7280),
+                                              letterSpacing: 0.3, // Pixel art letter spacing
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            song['duration'] ?? '0:00',
+                                            style: GoogleFonts.pressStart2p(
+                                              fontSize: 6,
+                                              color: const Color(0xFF6B7280),
+                                              letterSpacing: 0.3, // Pixel art letter spacing
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    child: const Icon(
-                                      Icons.music_note,
-                                      size: 16,
-                                      color: Color(0xFF6B46C1),
+                                    // Play/Pause button with pixel styling (moved to right side)
+                                    GestureDetector(
+                                      onTap: () async {
+                                        if (isCurrentSong) {
+                                          // If this is the current song, toggle play/pause
+                                          await _musicService.togglePlayPause();
+                                        } else {
+                                          // Set this as the current song and start playing
+                                          await _musicService.setCurrentSong(song, favoriteSongs, index);
+                                        }
+                                        
+                                        setState(() {
+                                          // Update the selected song for UI
+                                          selectedSongIndex = _musicService.isCurrentSong(song, index) && _musicService.isPlaying ? index : null;
+                                        });
+                                        
+                                        // Show playback status with option to go to player
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Row(
+                                              children: [
+                                                Icon(
+                                                  _musicService.isPlaying ? Icons.play_arrow : Icons.pause, 
+                                                  color: Colors.white, 
+                                                  size: 16
+                                                ),
+                                                SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${_musicService.isPlaying ? "Playing" : "Paused"}: ${song['title']}',
+                                                    style: GoogleFonts.pressStart2p(fontSize: 8),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                                    Navigator.pushNamed(context, '/player');
+                                                  },
+                                                  child: Text(
+                                                    'View Player',
+                                                    style: GoogleFonts.pressStart2p(
+                                                      fontSize: 8,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            backgroundColor: const Color(0xFF6B46C1),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: isCurrentSong 
+                                              ? const Color(0xFF6B46C1).withOpacity(0.2)
+                                              : const Color(0xFF93C5FD).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+                                          border: Border.all(
+                                            color: isCurrentSong 
+                                                ? const Color(0xFF6B46C1)
+                                                : const Color(0xFF93C5FD),
+                                            width: 3, // Thicker pixel border
+                                          ),
+                                          boxShadow: [
+                                            // Pixel art shadow layers
+                                            BoxShadow(
+                                              color: (isCurrentSong 
+                                                  ? const Color(0xFF6B46C1)
+                                                  : const Color(0xFF93C5FD)).withOpacity(0.4),
+                                              offset: const Offset(2, 2),
+                                              blurRadius: 0, // No blur for pixel art
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            isPlaying 
+                                                ? Icons.pause 
+                                                : Icons.play_arrow,
+                                            size: 20,
+                                            color: isCurrentSong 
+                                                ? const Color(0xFF6B46C1)
+                                                : const Color(0xFF93C5FD),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  title: Text(
-                                    song['title'] ?? 'Unknown Song',
-                                    style: GoogleFonts.pressStart2p(
-                                      fontSize: 8,
-                                      color: const Color(0xFF374151),
+                                    const SizedBox(width: 8),
+                                    // Favorite heart indicator
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF831843).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+                                        border: Border.all(
+                                          color: const Color(0xFF831843),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF831843).withOpacity(0.3),
+                                            offset: const Offset(2, 2),
+                                            blurRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.favorite,
+                                        color: Color(0xFF831843),
+                                        size: 18,
+                                      ),
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Icon(
-                                    Icons.favorite,
-                                    color: const Color(0xFF831843),
-                                    size: 16,
-                                  ),
-                                  onTap: () {
-                                    setState(() {
-                                      selectedSongIndex = selectedSongIndex == index ? null : index;
-                                    });
-                                  },
+                                  ],
                                 ),
                               );
                             },
@@ -2498,32 +2664,56 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                 
                 // Action buttons with pixel design
                 if (favoriteSongs.isNotEmpty) ...[
-                  PixelButton(
-                    text: selectedSongIndex != null ? 'Play Selected ♪' : 'Select a Song First',
-                    backgroundColor: selectedSongIndex != null 
-                        ? const Color(0xFFE8D5FF)
-                        : const Color(0xFFF3F4F6),
-                    textColor: selectedSongIndex != null 
-                        ? const Color(0xFF6B46C1)
-                        : const Color(0xFF9CA3AF),
-                    onPressed: selectedSongIndex != null ? () {
-                      Navigator.pushNamed(
-                        context, 
-                        '/player',
-                        arguments: favoriteSongs[selectedSongIndex!],
-                      );
-                    } : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Please select a favorite song first',
-                            style: GoogleFonts.pressStart2p(fontSize: 8),
-                          ),
-                          backgroundColor: const Color(0xFF831843),
-                          duration: const Duration(seconds: 2),
+                  // Now Playing button (if music is playing)
+                  if (_musicService.isPlaying && _musicService.currentSong != null) ...[
+                    PixelButton(
+                      text: 'Now Playing: ${_musicService.currentSong!['title']} ♪',
+                      backgroundColor: const Color.fromARGB(255, 53, 222, 166).withOpacity(0.1),
+                      textColor: const Color.fromARGB(255, 22, 24, 24),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/player');
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  
+                  // Play/Pause All button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PixelButton(
+                          text: _musicService.isPlaying ? 'Pause ⏸' : 'Play All ♪',
+                          backgroundColor: _musicService.isPlaying 
+                              ? const Color(0xFFFEF3C7)
+                              : const Color(0xFFE8D5FF),
+                          textColor: _musicService.isPlaying 
+                              ? const Color(0xFFD97706)
+                              : const Color(0xFF6B46C1),
+                          onPressed: () async {
+                            if (_musicService.isPlaying) {
+                              await _musicService.togglePlayPause();
+                            } else {
+                              // Start playing the first favorite song
+                              if (favoriteSongs.isNotEmpty) {
+                                await _musicService.setCurrentSong(favoriteSongs[0], favoriteSongs, 0);
+                              }
+                            }
+                            setState(() {});
+                          },
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: PixelButton(
+                          text: 'Player Screen →',
+                          backgroundColor: const Color(0xFFF0F9FF),
+                          textColor: const Color(0xFF1E40AF),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/player');
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                 ],
