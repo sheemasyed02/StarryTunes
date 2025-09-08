@@ -2,33 +2,84 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+// Simple Music Player Service for handling playback state
+class MusicPlayerService {
+  static final MusicPlayerService _instance = MusicPlayerService._internal();
+  factory MusicPlayerService() => _instance;
+  MusicPlayerService._internal();
+
+  Map<String, String>? _currentSong;
+  int _currentIndex = -1;
+  bool _isPlaying = false;
+  List<Map<String, String>> _currentPlaylist = [];
+
+  // Getters
+  Map<String, String>? get currentSong => _currentSong;
+  int get currentIndex => _currentIndex;
+  bool get isPlaying => _isPlaying;
+  List<Map<String, String>> get currentPlaylist => _currentPlaylist;
+
+  // Set current song and playlist
+  void setCurrentSong(Map<String, String> song, List<Map<String, String>> playlist, int index) {
+    _currentSong = song;
+    _currentPlaylist = playlist;
+    _currentIndex = index;
+    _isPlaying = true;
+  }
+
+  // Toggle play/pause
+  void togglePlayPause() {
+    _isPlaying = !_isPlaying;
+  }
+
+  // Stop playback
+  void stop() {
+    _isPlaying = false;
+  }
+
+  // Check if a specific song is currently playing
+  bool isSongPlaying(Map<String, String> song, int index) {
+    return _currentSong != null && 
+           _currentSong!['title'] == song['title'] && 
+           _currentIndex == index && 
+           _isPlaying;
+  }
+
+  // Check if a song is the current song (playing or paused)
+  bool isCurrentSong(Map<String, String> song, int index) {
+    return _currentSong != null && 
+           _currentSong!['title'] == song['title'] && 
+           _currentIndex == index;
+  }
+}
+
 // Global playlists data with your custom songs
 final Map<String, List<Map<String, String>>> globalPlaylists = {
   'Femanine': [
-    {'title': 'Yad – Vannah Rainelle', 'url': 'assets/Femanine/Yad.mp3'},
-    {'title': 'One of the Girls – The Weeknd', 'url': 'assets/Femanine/One of the girls.mp3'},
-    {'title': 'Good for You – Selena Gomez', 'url': 'assets/Femanine/Good for you.mp3'},
-    {'title': 'Under the Influence – Chris Brown', 'url': 'assets/Femanine/under the influence.mp3'},
-    {'title': 'Renegade – Aryan Shah', 'url': 'assets/Femanine/Renegade.mp3'},
-    {'title': 'Family Affair – Mary J. Blige', 'url': 'assets/Femanine/family affair.mp3'},
-    {'title': 'I Just Wanna Love Ya (feat. Cleo Kelley) – Sugar Blizz', 'url': 'assets/Femanine/i just wanna love.mp3'},
-    {'title': 'Another Life – Mimmi Bangoura', 'url': 'assets/Femanine/another life.mp3'},
-    {'title': 'What\'s My Name – Rihanna', 'url': 'assets/Femanine/what my name.mp3'},
-    {'title': 'Older – Isabel LaRosa', 'url': 'assets/Femanine/older.mp3'},
-    {'title': 'Collide – Justine Skye', 'url': 'assets/Femanine/collide.mp3'},
-    {'title': '7 Rings – Ariana Grande', 'url': 'assets/Femanine/7 rings.mp3'},
-    {'title': 'Gimme More – Britney Spears', 'url': 'assets/Femanine/gimme more.mp3'},
-    {'title': 'Step On Up – Ariana Grande', 'url': 'assets/Femanine/step on up.mp3'},
-    {'title': 'Doin\' Time – Lana Del Rey', 'url': 'assets/Femanine/doin time.mp3'},
-    {'title': 'Woman – Doja Cat', 'url': 'assets/Femanine/woman.mp3'},
-    {'title': 'Mantra – Jennie', 'url': 'assets/Femanine/mantra.mp3'},
-    {'title': 'No – Meghan Trainor', 'url': 'assets/Femanine/no.mp3'},
-    {'title': 'Ride or Die, Pt. 2 – Sevdaliza & Vanillia Antillano', 'url': 'assets/Femanine/ride or die.mp3'},
-    {'title': 'Rockstar – Lisa', 'url': 'assets/Femanine/rockstar.mp3'},
-    {'title': 'Diva – Beyoncé', 'url': 'assets/Femanine/diva.mp3'},
-    {'title': 'Jump – BLACKPINK', 'url': 'assets/Femanine/jump.mp3'},
-    {'title': 'Kill This Love – BLACKPINK', 'url': 'assets/Femanine/kill this love.mp3'},
-    {'title': 'Like Jennie – Jennie', 'url': 'assets/Femanine/like jennie.mp3'},
+    {'title': 'Yad', 'url': 'assets/Femanine/Yad.mp3', 'artist': 'Vannah Rainelle'},
+    {'title': 'One of the Girls', 'url': 'assets/Femanine/One of the girls.mp3', 'artist': 'The Weeknd'},
+    {'title': 'Good for You', 'url': 'assets/Femanine/Good for you.mp3', 'artist': 'Selena Gomez'},
+    {'title': 'Under the Influence', 'url': 'assets/Femanine/under the influence.mp3', 'artist': 'Chris Brown'},
+    {'title': 'Renegade', 'url': 'assets/Femanine/Renegade.mp3', 'artist': 'Aryan Shah'},
+    {'title': 'Family Affair', 'url': 'assets/Femanine/family affair.mp3', 'artist': 'Mary J. Blige'},
+    {'title': 'I Just Wanna Love Ya (feat. Cleo Kelley)', 'url': 'assets/Femanine/i just wanna love.mp3', 'artist': 'Sugar Blizz'},
+    {'title': 'Another Life', 'url': 'assets/Femanine/another life.mp3', 'artist': 'Mimmi Bangoura'},
+    {'title': 'What\'s My Name', 'url': 'assets/Femanine/what my name.mp3', 'artist': 'Rihanna'},
+    {'title': 'Older', 'url': 'assets/Femanine/older.mp3', 'artist': 'Isabel LaRosa'},
+    {'title': 'Collide', 'url': 'assets/Femanine/collide.mp3', 'artist': 'Justine Skye'},
+    {'title': '7 Rings', 'url': 'assets/Femanine/7 rings.mp3', 'artist': 'Ariana Grande'},
+    {'title': 'Gimme More', 'url': 'assets/Femanine/gimme more.mp3', 'artist': 'Britney Spears'},
+    {'title': 'Step On Up', 'url': 'assets/Femanine/step on up.mp3', 'artist': 'Ariana Grande'},
+    {'title': 'Doin\' Time', 'url': 'assets/Femanine/doin time.mp3', 'artist': 'Lana Del Rey'},
+    {'title': 'Woman', 'url': 'assets/Femanine/woman.mp3', 'artist': 'Doja Cat'},
+    {'title': 'Mantra', 'url': 'assets/Femanine/mantra.mp3', 'artist': 'Jennie'},
+    {'title': 'No', 'url': 'assets/Femanine/no.mp3', 'artist': 'Meghan Trainor'},
+    {'title': 'Ride or Die, Pt. 2', 'url': 'assets/Femanine/ride or die.mp3', 'artist': 'Sevdaliza & Vanillia Antillano'},
+    {'title': 'Rockstar', 'url': 'assets/Femanine/rockstar.mp3', 'artist': 'Lisa'},
+    {'title': 'Diva', 'url': 'assets/Femanine/diva.mp3', 'artist': 'Beyoncé'},
+    {'title': 'Jump', 'url': 'assets/Femanine/jump.mp3', 'artist': 'BLACKPINK'},
+    {'title': 'Kill This Love', 'url': 'assets/Femanine/kill this love.mp3', 'artist': 'BLACKPINK'},
+    {'title': 'Like Jennie – Jennie', 'url': 'assets/Femanine/like jennie.mp3' },
     {'title': 'Gabriela – Katseye', 'url': 'assets/Femanine/gabriela.mp3'},
     {'title': 'Bloodline – Ariana Grande', 'url': 'assets/Femanine/bloodline.mp3'},
     {'title': 'Side to side – Ariana Grande & Nicki Minaj', 'url': 'assets/Femanine/side to side.mp3'},
@@ -211,7 +262,7 @@ class PixelContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
-    final borderWidth = isSmallScreen ? 2.0 : 3.0;
+    final borderWidth = 3.0; // Fixed pixel-perfect border
     final defaultPadding = isSmallScreen ? 12.0 : 16.0;
 
     return Container(
@@ -224,11 +275,22 @@ class PixelContainer extends StatelessWidget {
           color: borderColor ?? const Color(0xFF93C5FD), // Light blue
           width: borderWidth,
         ),
-        borderRadius: BorderRadius.circular(4), // Blocky pixel corners
+        borderRadius: BorderRadius.circular(0), // Sharp pixel corners
         boxShadow: [
+          // Authentic pixel art shadow layers
           BoxShadow(
-            color: (borderColor ?? const Color(0xFF93C5FD)).withOpacity(0.2),
-            offset: Offset(borderWidth, borderWidth),
+            color: (borderColor ?? const Color(0xFF93C5FD)).withOpacity(0.6),
+            offset: const Offset(4, 4),
+            blurRadius: 0, // No blur for pixel art
+          ),
+          BoxShadow(
+            color: (borderColor ?? const Color(0xFF93C5FD)).withOpacity(0.3),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: (borderColor ?? const Color(0xFF93C5FD)).withOpacity(0.1),
+            offset: const Offset(1, 1),
             blurRadius: 0,
           ),
         ],
@@ -271,6 +333,24 @@ class PixelButton extends StatelessWidget {
     return Container(
       width: width,
       height: height ?? (isSmallScreen ? 40 : 48),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+        boxShadow: [
+          // Pixel art shadow layers
+          BoxShadow(
+            color: (textColor ?? const Color(0xFF831843)).withOpacity(0.8),
+            offset: const Offset(3, 3),
+            blurRadius: 0, // No blur for pixel art
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: (textColor ?? const Color(0xFF831843)).withOpacity(0.4),
+            offset: const Offset(1, 1),
+            blurRadius: 0,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -278,10 +358,10 @@ class PixelButton extends StatelessWidget {
           foregroundColor: textColor ?? const Color(0xFF831843),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(0), // Sharp pixel corners
             side: BorderSide(
               color: textColor ?? const Color(0xFF831843),
-              width: 2,
+              width: 3, // Thicker pixel border
             ),
           ),
           padding: EdgeInsets.symmetric(
@@ -296,6 +376,7 @@ class PixelButton extends StatelessWidget {
             style: GoogleFonts.pressStart2p(
               fontSize: responsiveFontSize,
               color: textColor ?? const Color(0xFF831843),
+              letterSpacing: 0.5, // Pixel art letter spacing
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -390,50 +471,62 @@ class StartListeningButton extends StatelessWidget {
     final isSmallScreen = screenWidth < 600;
     final isMediumScreen = screenWidth < 900;
     
-    final fontSize = isSmallScreen ? 10.0 : isMediumScreen ? 12.0 : 14.0;
-    final horizontalPadding = isSmallScreen ? 24.0 : 32.0;
-    final verticalPadding = isSmallScreen ? 16.0 : 20.0;
-    final borderWidth = isSmallScreen ? 2.0 : 3.0;
+    // More compact width, taller height for pixel art aesthetic
+    final buttonWidth = isSmallScreen ? 180.0 : isMediumScreen ? 200.0 : 220.0;
+    final fontSize = isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
+    final horizontalPadding = isSmallScreen ? 16.0 : 20.0;
+    final verticalPadding = isSmallScreen ? 20.0 : 24.0; // Increased height
+    final borderWidth = 3.0; // Fixed pixel-perfect border
     
-    return Container(
-      width: isSmallScreen ? double.infinity : null,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6B46C1).withOpacity(0.4),
-            offset: Offset(borderWidth, borderWidth),
-            blurRadius: 0,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE8D5FF), // Lavender
-          foregroundColor: const Color(0xFF6B46C1),
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding, 
-            vertical: verticalPadding,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4), // Blocky corners
-            side: BorderSide(
-              color: const Color(0xFF6B46C1),
-              width: borderWidth,
+    return Center(
+      child: Container(
+        width: buttonWidth, // Fixed narrower width
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+          boxShadow: [
+            // Pixel art shadow effect
+            BoxShadow(
+              color: const Color(0xFF4C1D95),
+              offset: const Offset(4, 4),
+              blurRadius: 0, // No blur for pixel art
+              spreadRadius: 0,
             ),
-          ),
-          elevation: 0,
+            BoxShadow(
+              color: const Color(0xFF6B46C1).withOpacity(0.3),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+              spreadRadius: 0,
+            ),
+          ],
         ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            'Start Listening ♪',
-            style: GoogleFonts.pressStart2p(
-              fontSize: fontSize,
-              color: const Color(0xFF6B46C1),
-              fontWeight: FontWeight.bold,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFE8D5FF), // Pixel lavender
+            foregroundColor: const Color(0xFF6B46C1),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding, 
+              vertical: verticalPadding,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+              side: BorderSide(
+                color: const Color(0xFF4C1D95), // Darker border for pixel effect
+                width: borderWidth,
+              ),
+            ),
+            elevation: 0,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Start Listening ♪',
+              style: GoogleFonts.pressStart2p(
+                fontSize: fontSize,
+                color: const Color(0xFF4C1D95), // Darker text for contrast
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0, // Pixel art spacing
+              ),
             ),
           ),
         ),
@@ -770,17 +863,25 @@ class _PlaylistCardState extends State<PlaylistCard> {
         padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
         decoration: BoxDecoration(
           color: widget.backgroundColor,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(0), // Sharp pixel corners
           border: Border.all(
             color: widget.borderColor,
-            width: isPressed ? (isSmallScreen ? 3 : 4) : 2,
+            width: isPressed ? 4 : 3, // Thicker pixel borders
           ),
           boxShadow: [
+            // Pixel art shadow layers
+            BoxShadow(
+              color: widget.borderColor.withOpacity(0.6),
+              offset: isPressed ? 
+                const Offset(2, 2) : 
+                const Offset(4, 4),
+              blurRadius: 0, // No blur for pixel art
+            ),
             BoxShadow(
               color: widget.borderColor.withOpacity(0.3),
               offset: isPressed ? 
-                (isSmallScreen ? const Offset(1, 1) : const Offset(2, 2)) : 
-                (isSmallScreen ? const Offset(2, 2) : const Offset(4, 4)),
+                const Offset(1, 1) : 
+                const Offset(2, 2),
               blurRadius: 0,
             ),
           ],
@@ -793,14 +894,20 @@ class _PlaylistCardState extends State<PlaylistCard> {
               height: isSmallScreen ? 32 : isMediumScreen ? 36 : 40,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.95),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(0), // Sharp pixel corners
                 border: Border.all(
                   color: widget.borderColor,
-                  width: 2,
+                  width: 3, // Thicker pixel border
                 ),
                 boxShadow: [
+                  // Pixel art shadow layers
                   BoxShadow(
-                    color: widget.borderColor.withOpacity(0.2),
+                    color: widget.borderColor.withOpacity(0.6),
+                    offset: const Offset(3, 3),
+                    blurRadius: 0, // No blur for pixel art
+                  ),
+                  BoxShadow(
+                    color: widget.borderColor.withOpacity(0.3),
                     offset: const Offset(1, 1),
                     blurRadius: 0,
                   ),
@@ -815,6 +922,7 @@ class _PlaylistCardState extends State<PlaylistCard> {
                       fontSize: isSmallScreen ? 8 : isMediumScreen ? 10 : 12,
                       color: widget.borderColor,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5, // Pixel art spacing
                     ),
                   ),
                 ),
@@ -832,15 +940,30 @@ class _PlaylistCardState extends State<PlaylistCard> {
                     fontSize: isSmallScreen ? 10 : isMediumScreen ? 12 : 14,
                     color: widget.borderColor,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5, // Pixel art spacing
                   ),
                 ),
               ),
             ),
-            // Arrow indicator with responsive size
-            Icon(
-              Icons.arrow_forward_ios,
-              size: isSmallScreen ? 14 : isMediumScreen ? 16 : 18,
-              color: widget.borderColor,
+            // Arrow indicator with pixel styling
+            Container(
+              width: isSmallScreen ? 20 : 24,
+              height: isSmallScreen ? 20 : 24,
+              decoration: BoxDecoration(
+                color: widget.borderColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(0), // Sharp corners
+                border: Border.all(
+                  color: widget.borderColor,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  size: isSmallScreen ? 10 : 12,
+                  color: widget.borderColor,
+                ),
+              ),
             ),
           ],
         ),
@@ -1556,17 +1679,27 @@ class _SongsScreenState extends State<SongsScreen> {
           color: selectedSongIndex == index 
               ? const Color(0xFF93C5FD).withOpacity(0.3)
               : Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(0), // Sharp pixel corners
           border: Border.all(
             color: selectedSongIndex == index 
                 ? const Color(0xFF1E40AF)
                 : const Color(0xFF93C5FD),
-            width: selectedSongIndex == index ? 3 : 2,
+            width: selectedSongIndex == index ? 4 : 3, // Thicker pixel borders
           ),
           boxShadow: [
+            // Pixel art shadow layers
             BoxShadow(
-              color: const Color(0xFF93C5FD).withOpacity(0.2),
-              offset: const Offset(2, 2),
+              color: (selectedSongIndex == index 
+                  ? const Color(0xFF1E40AF)
+                  : const Color(0xFF93C5FD)).withOpacity(0.4),
+              offset: const Offset(3, 3),
+              blurRadius: 0, // No blur for pixel art
+            ),
+            BoxShadow(
+              color: (selectedSongIndex == index 
+                  ? const Color(0xFF1E40AF)
+                  : const Color(0xFF93C5FD)).withOpacity(0.2),
+              offset: const Offset(1, 1),
               blurRadius: 0,
             ),
           ],
@@ -1579,11 +1712,18 @@ class _SongsScreenState extends State<SongsScreen> {
               height: isSmallScreen ? 24 : 28,
               decoration: BoxDecoration(
                 color: const Color(0xFF1E40AF).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(0), // Pixel art sharp corners
                 border: Border.all(
                   color: const Color(0xFF1E40AF),
-                  width: 1,
+                  width: 2, // Thicker pixel border
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E40AF).withOpacity(0.3),
+                    offset: const Offset(2, 2),
+                    blurRadius: 0, // No blur for pixel art
+                  ),
+                ],
               ),
               child: Center(
                 child: FittedBox(
@@ -1594,6 +1734,7 @@ class _SongsScreenState extends State<SongsScreen> {
                       fontSize: isSmallScreen ? 6 : isMediumScreen ? 8 : 10,
                       color: const Color(0xFF1E40AF),
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -1614,6 +1755,7 @@ class _SongsScreenState extends State<SongsScreen> {
                         fontSize: isSmallScreen ? 8 : isMediumScreen ? 10 : 12,
                         color: const Color(0xFF1E40AF),
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5, // Pixel art letter spacing
                       ),
                     ),
                   ),
@@ -1626,12 +1768,121 @@ class _SongsScreenState extends State<SongsScreen> {
                       style: GoogleFonts.pressStart2p(
                         fontSize: isSmallScreen ? 6 : isMediumScreen ? 7 : 8,
                         color: const Color(0xFF6B7280),
+                        letterSpacing: 0.3, // Pixel art letter spacing
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+            // Play/Pause button with pixel styling (moved to right side)
+            GestureDetector(
+              onTap: () {
+                final musicService = MusicPlayerService();
+                
+                if (musicService.isCurrentSong(song, index)) {
+                  // If this is the current song, toggle play/pause
+                  musicService.togglePlayPause();
+                } else {
+                  // Set this as the current song and start playing
+                  final playlist = globalPlaylists.values.first.toList();
+                  musicService.setCurrentSong(song, playlist, index);
+                }
+                
+                setState(() {
+                  // Update the selected song for UI
+                  selectedSongIndex = musicService.isCurrentSong(song, index) && musicService.isPlaying ? index : null;
+                });
+                
+                // Show playback status with option to go to player
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(
+                          musicService.isPlaying ? Icons.play_arrow : Icons.pause, 
+                          color: Colors.white, 
+                          size: 16
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            musicService.isPlaying 
+                                ? 'Playing: ${song['title']}' 
+                                : 'Paused: ${song['title']}',
+                            style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            Navigator.pushNamed(
+                              context,
+                              '/player',
+                              arguments: {
+                                'song': musicService.currentSong ?? song,
+                                'playlist': musicService.currentPlaylist.isNotEmpty 
+                                    ? musicService.currentPlaylist 
+                                    : globalPlaylists.values.first.toList(),
+                                'index': musicService.currentIndex >= 0 ? musicService.currentIndex : index,
+                                'isPlaying': musicService.isPlaying,
+                              },
+                            );
+                          },
+                          child: Text(
+                            'Player →',
+                            style: GoogleFonts.pressStart2p(fontSize: 6, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF6B46C1),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              },
+              child: Container(
+                width: isSmallScreen ? 32 : 36,
+                height: isSmallScreen ? 32 : 36,
+                decoration: BoxDecoration(
+                  color: MusicPlayerService().isSongPlaying(song, index)
+                      ? const Color(0xFF059669) // Green when playing
+                      : MusicPlayerService().isCurrentSong(song, index)
+                          ? const Color(0xFFF59E0B) // Orange when paused but current
+                          : const Color(0xFF6B46C1), // Purple when not current
+                  borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+                  border: Border.all(
+                    color: MusicPlayerService().isSongPlaying(song, index)
+                        ? const Color(0xFF065F46)
+                        : MusicPlayerService().isCurrentSong(song, index)
+                            ? const Color(0xFFD97706)
+                            : const Color(0xFF4C1D95),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (MusicPlayerService().isSongPlaying(song, index)
+                          ? const Color(0xFF065F46)
+                          : MusicPlayerService().isCurrentSong(song, index)
+                              ? const Color(0xFFD97706)
+                              : const Color(0xFF4C1D95)).withOpacity(0.4),
+                      offset: const Offset(2, 2),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    MusicPlayerService().isSongPlaying(song, index) 
+                        ? Icons.pause 
+                        : Icons.play_arrow,
+                    color: Colors.white,
+                    size: isSmallScreen ? 14 : 16,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 10),
             // Favorite button with responsive sizing
             GestureDetector(
               onTap: () {
@@ -1643,10 +1894,37 @@ class _SongsScreenState extends State<SongsScreen> {
                   }
                 });
               },
-              child: Icon(
-                favoritesManager.isFavorite(song['title'] ?? '') ? Icons.favorite : Icons.favorite_border,
-                color: favoritesManager.isFavorite(song['title'] ?? '') ? const Color(0xFF831843) : const Color(0xFF6B7280),
-                size: isSmallScreen ? 16 : 18,
+              child: Container(
+                width: isSmallScreen ? 32 : 36,
+                height: isSmallScreen ? 32 : 36,
+                decoration: BoxDecoration(
+                  color: favoritesManager.isFavorite(song['title'] ?? '') 
+                      ? const Color(0xFFFDF2F8) 
+                      : const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(0), // Sharp pixel corners
+                  border: Border.all(
+                    color: favoritesManager.isFavorite(song['title'] ?? '') 
+                        ? const Color(0xFF831843) 
+                        : const Color(0xFF6B7280),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (favoritesManager.isFavorite(song['title'] ?? '') 
+                          ? const Color(0xFF831843) 
+                          : const Color(0xFF6B7280)).withOpacity(0.3),
+                      offset: const Offset(2, 2),
+                      blurRadius: 0, // No blur for pixel art
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    favoritesManager.isFavorite(song['title'] ?? '') ? Icons.favorite : Icons.favorite_border,
+                    color: favoritesManager.isFavorite(song['title'] ?? '') ? const Color(0xFF831843) : const Color(0xFF6B7280),
+                    size: isSmallScreen ? 14 : 16,
+                  ),
+                ),
               ),
             ),
           ],
@@ -2525,10 +2803,46 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   void _initializeFromArguments() {
     final arguments = ModalRoute.of(context)?.settings.arguments;
+    final musicService = MusicPlayerService();
     
+    // First priority: Check if there's a current song from MusicPlayerService
+    if (musicService.currentSong != null) {
+      _currentSong = musicService.currentSong;
+      _playlist = List<Map<String, String>>.from(musicService.currentPlaylist);
+      _currentSongIndex = musicService.currentIndex;
+      _isPlaying = musicService.isPlaying;
+      print('Initialized from MusicPlayerService: ${_currentSong!['title']}');
+      if (_isPlaying) {
+        _playCurrentSong();
+      }
+      return;
+    }
+    
+    // Second priority: Use arguments passed to the screen
     if (arguments is Map<String, dynamic>) {
       _playlistName = arguments['playlistName'] as String?;
       final songIndex = arguments['songIndex'] as int? ?? 0;
+      final songData = arguments['song'] as Map<String, String>?;
+      final isPlaying = arguments['isPlaying'] as bool? ?? false;
+      
+      if (songData != null) {
+        _currentSong = songData;
+        _currentSongIndex = arguments['index'] as int? ?? songIndex;
+        _playlist = arguments['playlist'] as List<Map<String, String>>? ?? [songData];
+        _isPlaying = isPlaying;
+        print('Initialized with song data: ${_currentSong!['title']}, playing: $_isPlaying');
+        
+        // Update MusicPlayerService with this song
+        musicService.setCurrentSong(_currentSong!, _playlist, _currentSongIndex);
+        if (!_isPlaying) {
+          musicService.stop();
+        }
+        
+        if (_isPlaying) {
+          _playCurrentSong();
+        }
+        return;
+      }
       
       if (_playlistName != null && globalPlaylists.containsKey(_playlistName!)) {
         _playlist = List<Map<String, String>>.from(globalPlaylists[_playlistName!]!);
@@ -2702,6 +3016,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _currentSong = _playlist[_currentSongIndex];
     });
     
+    // Update MusicPlayerService
+    final musicService = MusicPlayerService();
+    if (_currentSong != null) {
+      musicService.setCurrentSong(_currentSong!, _playlist, _currentSongIndex);
+    }
+    
     if (_isPlaying || _currentPosition != Duration.zero) {
       _playCurrentSong();
     }
@@ -2719,6 +3039,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     setState(() {
       _currentSong = _playlist[_currentSongIndex];
     });
+    
+    // Update MusicPlayerService
+    final musicService = MusicPlayerService();
+    if (_currentSong != null) {
+      musicService.setCurrentSong(_currentSong!, _playlist, _currentSongIndex);
+    }
     
     if (_isPlaying || _currentPosition != Duration.zero) {
       _playCurrentSong();
@@ -2909,13 +3235,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     return GestureDetector(
       onTap: () {
+        final musicService = MusicPlayerService();
+        
         if (_isPlaying) {
           _pauseAudio();
+          musicService.stop(); // Update service state
         } else {
           if (_currentPosition == Duration.zero) {
             _playCurrentSong();
+            // Update MusicPlayerService with current song
+            if (_currentSong != null) {
+              musicService.setCurrentSong(_currentSong!, _playlist, _currentSongIndex);
+            }
           } else {
             _resumeAudio();
+            musicService.togglePlayPause(); // Resume in service
           }
         }
       },
